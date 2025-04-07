@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { useSettings } from "@/contexts/SettingsContext";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 
 const SettingsSheet = () => {
   const { model, setModel, systemPrompt, setSystemPrompt, apiKeys, setApiKey } = useSettings();
@@ -44,7 +45,7 @@ const SettingsSheet = () => {
           <span className="sr-only">設定</span>
         </Button>
       </SheetTrigger>
-      <SheetContent className="overflow-y-auto">
+      <SheetContent className="overflow-y-auto sm:max-w-md md:max-w-xl">
         <SheetHeader>
           <SheetTitle>設定</SheetTitle>
           <SheetDescription>
@@ -109,16 +110,22 @@ const SettingsSheet = () => {
             )}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label htmlFor="system-prompt">システムプロンプト</Label>
-            <Textarea
-              id="system-prompt"
-              value={systemPrompt}
-              onChange={(e) => setSystemPrompt(e.target.value)}
-              className="min-h-[150px]"
-            />
+            <Card className="border-dashed">
+              <CardContent className="p-4">
+                <Textarea
+                  id="system-prompt"
+                  value={systemPrompt}
+                  onChange={(e) => setSystemPrompt(e.target.value)}
+                  className="min-h-[300px] border-0 focus-visible:ring-0 p-0 shadow-none resize-none"
+                  autoResize={true}
+                  placeholder="AIモデルに与える指示文を入力してください"
+                />
+              </CardContent>
+            </Card>
             <p className="text-xs text-muted-foreground">
-              AIモデルに与える指示文です。メール生成の性質を決定します。
+              AIモデルに与える指示文です。メール生成の性質を決定します。編集後は自動的に保存されます。
             </p>
           </div>
         </div>

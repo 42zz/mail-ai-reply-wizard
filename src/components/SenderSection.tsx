@@ -46,6 +46,7 @@ const SenderSection = ({
           onChange={(e) => setSignature(e.target.value)}
           placeholder="例: 株式会社〇〇&#10;営業部 山田太郎&#10;TEL: 03-xxxx-xxxx"
           className="min-h-[100px] w-full"
+          autoResize={true}
         />
       </div>
     </div>

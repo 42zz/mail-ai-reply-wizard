@@ -21,6 +21,7 @@ const MessageSection = ({
         onChange={(e) => setReceivedMessage(e.target.value)}
         placeholder="受信したメッセージの内容を入力してください"
         className="min-h-[150px] w-full"
+        autoResize={true}
       />
     </div>
   );

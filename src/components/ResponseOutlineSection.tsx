@@ -21,6 +21,7 @@ const ResponseOutlineSection = ({
         onChange={(e) => setResponseOutline(e.target.value)}
         placeholder="返信で伝えたい要点を箇条書きや簡潔な文章で記入してください"
         className="min-h-[150px] w-full"
+        autoResize={true}
       />
     </div>
   );

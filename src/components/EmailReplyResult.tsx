@@ -124,6 +124,7 @@ const EmailReplyResult = ({ subject, content, onReset }: EmailReplyResultProps) 
               value={editableContent}
               onChange={(e) => setEditableContent(e.target.value)}
               className="min-h-[300px] w-full font-mono text-sm"
+              autoResize={true}
             />
           </div>
 
