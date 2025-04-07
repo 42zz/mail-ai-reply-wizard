@@ -1,6 +1,7 @@
 
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Info } from "lucide-react";
 
 interface SenderSectionProps {
   senderName: string;
@@ -17,6 +18,11 @@ const SenderSection = ({
 }: SenderSectionProps) => {
   return (
     <div className="space-y-4">
+      <div className="bg-blue-50 border-l-4 border-blue-500 p-3 flex items-center space-x-2 text-sm text-blue-700 mb-4">
+        <Info className="h-5 w-5 flex-shrink-0" />
+        <p>送信者情報は、ブラウザに一時的に保存されます。次回利用時に入力が自動的に引き継がれます。</p>
+      </div>
+
       <div className="space-y-2">
         <label htmlFor="sender-name" className="block text-sm font-medium">
           送信者名
