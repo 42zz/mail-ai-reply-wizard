@@ -17,59 +17,91 @@ interface EmailGenerationResponse {
 export const generateEmailReply = async (
   formData: EmailGenerationRequest
 ): Promise<EmailGenerationResponse> => {
-  // For demonstration purposes, we're generating the email reply directly in the frontend
-  // In a real application, this would be an API call to a backend service
-  
   try {
-    // Simulate API call with a delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    console.log("Sending request to AI API with data:", formData);
 
-    // Format the current date in Japanese style
+    // Format the date in Japanese style for the prompt
     const dateObj = new Date(formData.date);
     const year = dateObj.getFullYear();
     const month = dateObj.getMonth() + 1;
     const day = dateObj.getDate();
     
-    // Get seasonal greeting based on month
-    let seasonalGreeting = "";
-    if (month >= 3 && month <= 5) {
-      seasonalGreeting = "春暖の候、ますますご清栄のこととお喜び申し上げます。";
-    } else if (month >= 6 && month <= 8) {
-      seasonalGreeting = "暑中の折、ますますご健勝のこととお喜び申し上げます。";
-    } else if (month >= 9 && month <= 11) {
-      seasonalGreeting = "秋涼の候、ますますご清祥のこととお喜び申し上げます。";
-    } else {
-      seasonalGreeting = "寒冷の候、ますますご健勝のこととお喜び申し上げます。";
+    // Create a prompt for the AI model
+    const prompt = `
+あなたは優れたビジネスメール作成の専門家です。
+以下の情報を元に、日本語の丁寧なビジネスメールの返信を作成してください。
+
+日付: ${year}年${month}月${day}日
+送信者: ${formData.sender_name}
+署名: ${formData.signatures}
+受信者: ${formData.recipient_name}
+受信したメッセージ: ${formData.received_message}
+返信の要点: ${formData.response_outline}
+
+日本の季節や社会的なマナーに合わせた適切な挨拶から始め、受信メッセージへの応答と返信要点を含む本文、
+そして丁寧な締めの言葉と署名を含めてください。
+
+メールの件名と本文を分けて出力してください。フォーマットは以下の通りです:
+件名: [ここに件名]
+本文:
+[ここに本文]
+`;
+
+    // Call to OpenAI's API (or similar)
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${import.meta.env.VITE_OPENAI_API_KEY || ''}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "system",
+            content: "You are a professional business email writer who specializes in Japanese business correspondence."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 1000,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("AI API error:", errorData);
+      throw new Error(`API error: ${response.status}`);
     }
+
+    const data = await response.json();
+    console.log("AI API response:", data);
     
-    // Basic email template based on the form data
-    // This is a simplified version for demonstration
-    // In a real app, you would use AI like OpenAI or Claude to generate this
+    const aiResponse = data.choices[0].message.content;
     
-    const recipientWithHonorifics = formData.recipient_name + "様";
+    // Parse the API response to extract subject and content
+    let subject = "";
+    let content = "";
     
-    // Example subject line based on the response outline
-    const subject = formData.response_outline.length > 10 
-      ? formData.response_outline.substring(0, 10) + "について" 
-      : "ご連絡いただきありがとうございます";
-      
-    // Generate email content
-    const content = `${recipientWithHonorifics}
-
-${seasonalGreeting}
-平素は格別のご高配を賜り、厚く御礼申し上げます。
-
-${formData.received_message ? "先日はご連絡いただきありがとうございました。" : ""}
-
-${formData.response_outline}
-
-何かご不明な点がございましたら、お気軽にお問い合わせください。
-引き続きどうぞよろしくお願い申し上げます。
-
-敬具
-
-${year}年${month}月${day}日
-${formData.signatures}`;
+    if (aiResponse.includes("件名:")) {
+      const parts = aiResponse.split("本文:");
+      if (parts.length >= 2) {
+        const subjectLine = parts[0].split("件名:")[1].trim();
+        subject = subjectLine;
+        content = parts[1].trim();
+      } else {
+        // Fallback if parsing fails
+        subject = "ご連絡いただきありがとうございます";
+        content = aiResponse;
+      }
+    } else {
+      // Fallback if format is not as expected
+      subject = "ご連絡いただきありがとうございます";
+      content = aiResponse;
+    }
 
     return {
       subject,

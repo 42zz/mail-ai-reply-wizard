@@ -5,7 +5,8 @@ import EmailReplyResult from "@/components/EmailReplyResult";
 import { generateEmailReply } from "@/lib/emailGeneration";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Sparkles } from "lucide-react";
+import { Mail, Sparkles, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Index = () => {
   const { toast } = useToast();
@@ -13,10 +14,21 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedSubject, setGeneratedSubject] = useState<string | undefined>(undefined);
   const [generatedContent, setGeneratedContent] = useState("");
+  const hasApiKey = !!import.meta.env.VITE_OPENAI_API_KEY;
 
   const handleFormSubmit = async (formData: EmailFormData) => {
     setIsLoading(true);
     try {
+      if (!hasApiKey) {
+        toast({
+          title: "APIキーエラー",
+          description: "OpenAI APIキーが設定されていません。環境変数を確認してください。",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const requestData = {
         date: format(formData.date, "yyyy-MM-dd"),
         signatures: formData.signature,
@@ -70,6 +82,15 @@ const Index = () => {
             必要な情報を入力するだけで、AIが適切なビジネスメールの返信文を生成します。
           </p>
         </div>
+        
+        {!hasApiKey && (
+          <Alert variant="warning" className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              OpenAI APIキーが設定されていません。環境変数「VITE_OPENAI_API_KEY」にAPIキーを設定してください。
+            </AlertDescription>
+          </Alert>
+        )}
         
         <div className="mt-8">
           {showResult ? (
