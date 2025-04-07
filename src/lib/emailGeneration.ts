@@ -60,19 +60,7 @@ export const generateEmailReply = async (
       "Content-Type": "application/json",
     };
 
-    // メイン処理ロジック - まずはGPT-4oを試みる
-    if (formData.model === "claude-haiku") {
-      try {
-        // Claudeの処理を試みる
-        return await callClaudeAPI(apiKey, formData.systemPrompt || "", xmlInput);
-      } catch (error) {
-        console.error("Claude API error, falling back to GPT-4o:", error);
-        // エラーが発生した場合はGPT-4oにフォールバック
-        formData.model = "gpt4o";
-      }
-    }
-
-    // GPT-4oの処理（デフォルトまたはフォールバック）
+    // メイン処理ロジック - OpenAI APIを使用
     headers.Authorization = `Bearer ${apiKey}`;
     requestBody = {
       model: "gpt-4o",
@@ -93,67 +81,95 @@ export const generateEmailReply = async (
 
     console.log(`Sending request to ${apiEndpoint}`, { headers: { ...headers, Authorization: "[REDACTED]" }, body: requestBody });
 
-    // Call to OpenAI API
-    const response = await fetch(apiEndpoint, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(requestBody),
-    });
+    // Call to OpenAI API with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒タイムアウト
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("AI API error:", errorData);
+    try {
+      const response = await fetch(apiEndpoint, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
+      });
       
-      // APIエラーの種類に基づいたメッセージを返す
-      if (response.status === 401) {
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("AI API error:", errorData);
+        
+        // APIエラーの種類に基づいたメッセージを返す
+        if (response.status === 401) {
+          return {
+            content: "APIキーの認証に失敗しました。設定画面から正しいAPIキーを設定してください。",
+            success: false,
+            error: "INVALID_API_KEY"
+          };
+        } else if (response.status === 429) {
+          return {
+            content: "APIリクエスト制限に達しました。しばらく時間をおいてから再試行してください。",
+            success: false,
+            error: "RATE_LIMIT_EXCEEDED"
+          };
+        }
+        
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("AI API response:", data);
+      
+      // JSON形式のレスポンスを解析
+      try {
+        const jsonResponse = typeof data.choices[0].message.content === 'string' 
+          ? JSON.parse(data.choices[0].message.content) 
+          : data.choices[0].message.content;
+          
+        // 内容がない場合はエラーとして処理
+        if (!jsonResponse.content || jsonResponse.content.trim() === "") {
+          return {
+            content: "AIが空の返信を生成しました。もう一度お試しください。",
+            success: false,
+            error: "EMPTY_RESPONSE"
+          };
+        }
+          
         return {
-          content: "APIキーの認証に失敗しました。設定画面から正しいAPIキーを設定してください。",
-          success: false,
-          error: "INVALID_API_KEY"
+          subject: jsonResponse.subject || "",
+          content: jsonResponse.content || "",
+          success: true
         };
-      } else if (response.status === 429) {
+      } catch (error) {
+        console.error("Error parsing GPT-4o JSON response:", error);
+        // JSONが解析できない場合は、生のレスポンスを返す
         return {
-          content: "APIリクエスト制限に達しました。しばらく時間をおいてから再試行してください。",
-          success: false,
-          error: "RATE_LIMIT_EXCEEDED"
+          content: data.choices[0].message.content || "返信文の生成に失敗しました。",
+          success: true
         };
       }
-      
-      throw new Error(`API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log("AI API response:", data);
-    
-    // JSON形式のレスポンスを解析
-    try {
-      const jsonResponse = typeof data.choices[0].message.content === 'string' 
-        ? JSON.parse(data.choices[0].message.content) 
-        : data.choices[0].message.content;
-        
-      return {
-        subject: jsonResponse.subject || "",
-        content: jsonResponse.content || "",
-        success: true
-      };
     } catch (error) {
-      console.error("Error parsing GPT-4o JSON response:", error);
-      return {
-        content: data.choices[0].message.content || "返信文の生成に失敗しました。",
-        success: true
-      };
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        return {
+          content: "リクエストがタイムアウトしました。ネットワーク接続を確認して、もう一度お試しください。",
+          success: false,
+          error: "TIMEOUT"
+        };
+      }
+      throw error; // 他のエラーは外側のcatchブロックで処理
     }
   } catch (error) {
     console.error("Email generation error:", error);
     return {
-      content: "メール生成中にエラーが発生しました。もう一度お試しください。",
+      content: "メール生成中にエラーが発生しました。ネットワーク接続を確認して、もう一度お試しください。",
       success: false,
       error: "GENERATION_ERROR"
     };
   }
 };
 
-// Claude APIを呼び出す分離関数
+// Claude APIを呼び出す分離関数（現在はCORSの問題で使用されていない）
 async function callClaudeAPI(apiKey: string, systemPrompt: string, xmlInput: string): Promise<EmailGenerationResponse> {
   // ここでは、実際にClaudeのAPIを呼び出さず、CORSエラーを避けるために直接GPT-4oにフォールバック
   throw new Error("Claude API currently unavailable due to CORS restrictions");

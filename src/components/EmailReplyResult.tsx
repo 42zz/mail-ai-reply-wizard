@@ -1,11 +1,11 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, RefreshCcw, Check } from "lucide-react";
+import { Copy, RefreshCcw, Check, AlertTriangle } from "lucide-react";
 
 interface EmailReplyResultProps {
   subject?: string;
@@ -22,9 +22,9 @@ const EmailReplyResult = ({ subject, content, onReset }: EmailReplyResultProps) 
   const [editableContent, setEditableContent] = useState(content);
 
   // Update the editable content when content prop changes
-  useState(() => {
+  useEffect(() => {
     setEditableContent(content);
-  });
+  }, [content]);
 
   const copyToClipboard = async (text: string, type: "subject" | "content" | "all") => {
     try {
