@@ -12,14 +12,25 @@ interface EmailFormData {
 }
 
 export function useEmailGeneration() {
-  const { model, systemPrompt } = useSettings();
+  const { model, systemPrompt, apiKeys } = useSettings();
+
+  // Get the appropriate API key based on selected model
+  const getApiKey = () => {
+    switch (model) {
+      case "chatgpt": return apiKeys.openai;
+      case "gemini": return apiKeys.gemini;
+      case "claude": return apiKeys.claude;
+      case "mistral": return apiKeys.mistral;
+      default: return apiKeys.openai;
+    }
+  };
 
   const generateEmail = async (formData: EmailFormData) => {
     return generateEmailReply({
       ...formData,
       model,
       systemPrompt,
-    });
+    }, getApiKey());
   };
 
   return { generateEmail };
