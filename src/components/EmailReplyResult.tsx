@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, RefreshCcw, Check, Edit } from "lucide-react";
+import { Copy, RefreshCcw, Check } from "lucide-react";
 
 interface EmailReplyResultProps {
   subject?: string;
@@ -14,12 +14,17 @@ interface EmailReplyResultProps {
   onEdit: () => void;
 }
 
-const EmailReplyResult = ({ subject, content, onReset, onEdit }: EmailReplyResultProps) => {
+const EmailReplyResult = ({ subject, content, onReset }: EmailReplyResultProps) => {
   const { toast } = useToast();
   const [isSubjectCopied, setIsSubjectCopied] = useState(false);
   const [isContentCopied, setIsContentCopied] = useState(false);
   const [isAllCopied, setIsAllCopied] = useState(false);
   const [editableContent, setEditableContent] = useState(content);
+
+  // Update the editable content when content prop changes
+  useState(() => {
+    setEditableContent(content);
+  });
 
   const copyToClipboard = async (text: string, type: "subject" | "content" | "all") => {
     try {
@@ -54,9 +59,19 @@ const EmailReplyResult = ({ subject, content, onReset, onEdit }: EmailReplyResul
     await copyToClipboard(allText, "all");
   };
 
+  if (!content) {
+    return (
+      <Card className="w-full h-full flex items-center justify-center min-h-[300px] bg-gray-50 border border-dashed">
+        <CardContent className="text-center text-gray-500">
+          <p>入力情報を送信すると、生成された返信が表示されます</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <div className="w-full animate-fade-in">
-      <Card className="w-full">
+    <div className="w-full h-full">
+      <Card className="w-full h-full">
         <CardHeader>
           <CardTitle className="text-xl">生成されたメール返信</CardTitle>
         </CardHeader>
@@ -112,7 +127,7 @@ const EmailReplyResult = ({ subject, content, onReset, onEdit }: EmailReplyResul
             />
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+          <div className="flex gap-3 pt-2">
             <Button
               variant="outline"
               className="flex-1"
@@ -120,14 +135,6 @@ const EmailReplyResult = ({ subject, content, onReset, onEdit }: EmailReplyResul
             >
               <RefreshCcw className="h-4 w-4 mr-2" />
               新規作成
-            </Button>
-            <Button
-              variant="secondary"
-              className="flex-1"
-              onClick={onEdit}
-            >
-              <Edit className="h-4 w-4 mr-2" />
-              入力を編集
             </Button>
             <Button
               variant="default"

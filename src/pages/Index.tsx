@@ -13,7 +13,6 @@ const Index = () => {
   const { toast } = useToast();
   const { apiKeys } = useSettings();
   const { generateEmail } = useEmailGeneration();
-  const [showResult, setShowResult] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [generatedSubject, setGeneratedSubject] = useState<string | undefined>(undefined);
   const [generatedContent, setGeneratedContent] = useState("");
@@ -42,7 +41,6 @@ const Index = () => {
       if (response.success) {
         setGeneratedSubject(response.subject);
         setGeneratedContent(response.content);
-        setShowResult(true);
       } else {
         // エラーの種類に基づいたメッセージを表示
         let errorMessage = "メール生成中にエラーが発生しました。もう一度お試しください。";
@@ -74,13 +72,9 @@ const Index = () => {
   };
 
   const handleReset = () => {
-    setShowResult(false);
     setCurrentFormData(undefined);
-  };
-
-  const handleEdit = () => {
-    setShowResult(false);
-    // Current form data is preserved, allowing the form to be pre-filled
+    setGeneratedSubject(undefined);
+    setGeneratedContent("");
   };
 
   // Function to open settings sheet
@@ -94,8 +88,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-12">
-      <div className="container px-4 sm:px-6 lg:px-8 max-w-4xl">
-        <div className="text-center mb-12 animate-fade-in">
+      <div className="container px-4 sm:px-6 lg:px-8 max-w-7xl">
+        <div className="text-center mb-8 animate-fade-in">
           <div className="inline-flex items-center justify-center p-3 bg-blue-100 rounded-full mb-4 shadow-inner">
             <Mail className="h-8 w-8 text-blue-600" />
           </div>
@@ -126,21 +120,25 @@ const Index = () => {
           </Alert>
         )}
         
-        <div className="mt-8">
-          {showResult ? (
-            <EmailReplyResult
-              subject={generatedSubject}
-              content={generatedContent}
-              onReset={handleReset}
-              onEdit={handleEdit}
-            />
-          ) : (
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Left column - Input form */}
+          <div className="animate-fade-in">
             <EmailReplyForm 
               onSubmit={handleFormSubmit} 
               isLoading={isLoading} 
               initialData={currentFormData}
             />
-          )}
+          </div>
+          
+          {/* Right column - Results */}
+          <div className="animate-fade-in">
+            <EmailReplyResult
+              subject={generatedSubject}
+              content={generatedContent}
+              onReset={handleReset}
+              onEdit={() => {/* Editing happens in the left panel */}}
+            />
+          </div>
         </div>
         
         <div className="mt-12 text-center text-gray-500 text-sm">
