@@ -20,24 +20,18 @@ const Index = () => {
   // Get the appropriate API key based on selected model
   const getApiKey = () => {
     switch (model) {
-      case "chatgpt": return apiKeys.openai;
-      case "gpt4o": return apiKeys.openai;  // Uses the same OpenAI key
+      case "gpt4o": return apiKeys.openai;  // Uses the OpenAI key
       case "gemini": return apiKeys.gemini;
-      case "claude": return apiKeys.claude;
-      case "claude-haiku": return apiKeys.claude;  // Uses the same Claude key
-      case "mistral": return apiKeys.mistral;
+      case "claude-haiku": return apiKeys.claude;  // Uses the Claude key
       default: return apiKeys.openai;
     }
   };
   
   const getApiKeyDisplayName = () => {
     switch (model) {
-      case "chatgpt": return "OpenAI";
       case "gpt4o": return "OpenAI";
       case "gemini": return "Gemini";
-      case "claude": return "Claude";
       case "claude-haiku": return "Claude";
-      case "mistral": return "Mistral";
       default: return "OpenAI";
     }
   };

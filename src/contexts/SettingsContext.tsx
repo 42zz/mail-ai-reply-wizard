@@ -10,7 +10,6 @@ interface SettingsContextType {
     openai: string;
     gemini: string;
     claude: string;
-    mistral: string;
   };
   setApiKey: (provider: string, key: string) => void;
 }
@@ -18,7 +17,7 @@ interface SettingsContextType {
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
-  const [model, setModel] = useState("chatgpt");
+  const [model, setModel] = useState("gpt4o");
   const [systemPrompt, setSystemPrompt] = useState(
     `あなたはプロフェッショナルなメール返信支援AIです。以下のXML形式で提供される情報に基づいて、丁寧で適切なメール返信を作成してください。
 
@@ -55,7 +54,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     openai: localStorage.getItem("openai_api_key") || "",
     gemini: localStorage.getItem("gemini_api_key") || "",
     claude: localStorage.getItem("claude_api_key") || "",
-    mistral: localStorage.getItem("mistral_api_key") || "",
   });
 
   // Function to update an API key

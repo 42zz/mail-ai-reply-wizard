@@ -81,25 +81,6 @@ export const generateEmailReply = async (
           response_format: { type: "json_object" }
         };
         break;
-        
-      case "chatgpt":
-        headers.Authorization = `Bearer ${apiKey}`;
-        requestBody = {
-          model: "gpt-3.5-turbo",
-          messages: [
-            {
-              role: "system",
-              content: formData.systemPrompt || "You are a professional business email writer who specializes in Japanese business correspondence."
-            },
-            {
-              role: "user",
-              content: xmlInput
-            }
-          ],
-          temperature: 0.7,
-          max_tokens: 1000,
-        };
-        break;
       
       case "gemini":
         apiEndpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
@@ -140,49 +121,11 @@ export const generateEmailReply = async (
         };
         break;
         
-      case "claude":
-        apiEndpoint = "https://api.anthropic.com/v1/messages";
-        headers.Authorization = `Bearer ${apiKey}`;
-        headers["anthropic-version"] = "2023-06-01";
-        requestBody = {
-          model: "claude-3-sonnet-20240229",
-          system: formData.systemPrompt || "You are a professional business email writer who specializes in Japanese business correspondence.",
-          messages: [
-            {
-              role: "user",
-              content: xmlInput
-            }
-          ],
-          max_tokens: 1000,
-          temperature: 0.7
-        };
-        break;
-      
-      case "mistral":
-        apiEndpoint = "https://api.mistral.ai/v1/chat/completions";
-        headers.Authorization = `Bearer ${apiKey}`;
-        requestBody = {
-          model: "mistral-medium",
-          messages: [
-            {
-              role: "system",
-              content: formData.systemPrompt || "You are a professional business email writer who specializes in Japanese business correspondence."
-            },
-            {
-              role: "user",
-              content: xmlInput
-            }
-          ],
-          temperature: 0.7,
-          max_tokens: 1000
-        };
-        break;
-        
       default:
-        // Fallback to OpenAI
+        // Fallback to GPT-4o
         headers.Authorization = `Bearer ${apiKey}`;
         requestBody = {
-          model: "gpt-3.5-turbo",
+          model: "gpt-4o",
           messages: [
             {
               role: "system",
@@ -195,6 +138,7 @@ export const generateEmailReply = async (
           ],
           temperature: 0.7,
           max_tokens: 1000,
+          response_format: { type: "json_object" }
         };
     }
 
@@ -257,13 +201,8 @@ export const generateEmailReply = async (
         aiResponse = data.candidates[0].content.parts[0].text;
         break;
       case "claude-haiku":
-      case "claude":
         aiResponse = data.content[0].text;
         break;
-      case "mistral":
-        aiResponse = data.choices[0].message.content;
-        break;
-      case "chatgpt":
       default:
         aiResponse = data.choices[0].message.content;
     }

@@ -29,10 +29,9 @@ const SettingsSheet = () => {
   // APIプロバイダーのドキュメントへのリンク
   const getApiDocLink = () => {
     switch (model) {
-      case "chatgpt": return "https://platform.openai.com/api-keys";
+      case "gpt4o": return "https://platform.openai.com/api-keys";
       case "gemini": return "https://ai.google.dev/tutorials/setup";
-      case "claude": return "https://console.anthropic.com/settings/keys";
-      case "mistral": return "https://console.mistral.ai/api-keys/";
+      case "claude-haiku": return "https://console.anthropic.com/settings/keys";
       default: return "https://platform.openai.com/api-keys";
     }
   };
@@ -65,10 +64,9 @@ const SettingsSheet = () => {
                 <SelectValue placeholder="モデルを選択" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="chatgpt">ChatGPT</SelectItem>
+                <SelectItem value="gpt4o">GPT-4o</SelectItem>
                 <SelectItem value="gemini">Gemini</SelectItem>
-                <SelectItem value="claude">Claude</SelectItem>
-                <SelectItem value="mistral">Mistral</SelectItem>
+                <SelectItem value="claude-haiku">Claude Haiku</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
@@ -130,16 +128,6 @@ const SettingsSheet = () => {
                     id="claude-key"
                     value={apiKeys.claude}
                     onChange={(e) => setApiKey("claude", e.target.value)}
-                    placeholder="API キーを入力"
-                    type={showApiKeys ? "text" : "password"}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="mistral-key" className="text-xs mb-1 block">Mistral APIキー</Label>
-                  <Input
-                    id="mistral-key"
-                    value={apiKeys.mistral}
-                    onChange={(e) => setApiKey("mistral", e.target.value)}
                     placeholder="API キーを入力"
                     type={showApiKeys ? "text" : "password"}
                   />
