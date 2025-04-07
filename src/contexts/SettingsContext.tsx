@@ -28,9 +28,20 @@ interface SettingsContextType {
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
-  const [model, setModel] = useState("gpt4o");
-  const [systemPrompt, setSystemPrompt] = useState(
-    `あなたはプロフェッショナルなメール返信支援AIです。以下のXML形式で提供される情報に基づいて、丁寧で適切なメール返信を作成してください。
+  const [model, setModel] = useState(() => {
+    // ローカルストレージからモデルを読み込む
+    return localStorage.getItem("selected_model") || "gpt-4o";
+  });
+  
+  // モデルが変更されたときにローカルストレージに保存
+  useEffect(() => {
+    localStorage.setItem("selected_model", model);
+  }, [model]);
+  
+  const [systemPrompt, setSystemPrompt] = useState(() => {
+    // ローカルストレージからシステムプロンプトを読み込む
+    const savedPrompt = localStorage.getItem("system_prompt");
+    return savedPrompt || `あなたはプロフェッショナルなメール返信支援AIです。以下のXML形式で提供される情報に基づいて、丁寧で適切なメール返信を作成してください。
 
 <input>
   <current_date>YYYY-MM-DD形式の日付</current_date>
@@ -43,7 +54,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 ## 返信作成のガイドライン
 1. 必要に応じて適切な件名を作成してください
 2. 日本のビジネスマナーに沿った丁寧な言葉遣いを使用してください
-3. 受信者名と送信者名を適切に使用し、敬称を付けてください
+3. 送信者名を適切に使用し、敬称を付けてください
 4. 提供された返信内容の概要に基づいて、具体的かつ明確な返信を作成してください
 5. 提供された署名は一切変更せず、完全に同じ形式（スペース、改行、書式など）で適切な場所に配置してください
 6. 署名が提供されていない場合は、署名を使用しないでください。
@@ -56,8 +67,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   <content>メール本文</content>
 </output>
 
-上記のガイドラインに従って、プロフェッショナルで状況に適したメール返信を作成してください。署名の形式は厳密に守り、一文字も変更しないでください。`
-  );
+上記のガイドラインに従って、プロフェッショナルで状況に適したメール返信を作成してください。署名の形式は厳密に守り、一文字も変更しないでください。`;
+  });
+
+  // システムプロンプトが変更されたときにローカルストレージに保存
+  useEffect(() => {
+    localStorage.setItem("system_prompt", systemPrompt);
+  }, [systemPrompt]);
 
   // Initialize API keys from localStorage or empty strings
   const [apiKeys, setApiKeys] = useState({
