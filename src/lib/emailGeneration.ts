@@ -17,7 +17,8 @@ interface EmailGenerationResponse {
 }
 
 export const generateEmailReply = async (
-  formData: EmailGenerationRequest
+  formData: EmailGenerationRequest,
+  apiKey: string
 ): Promise<EmailGenerationResponse> => {
   try {
     console.log("Sending request to AI API with data:", formData);
@@ -59,7 +60,7 @@ export const generateEmailReply = async (
     // Configure request based on selected model
     switch (formData.model) {
       case "chatgpt":
-        headers.Authorization = `Bearer ${import.meta.env.VITE_OPENAI_API_KEY || ''}`;
+        headers.Authorization = `Bearer ${apiKey}`;
         requestBody = {
           model: "gpt-3.5-turbo",
           messages: [
@@ -79,7 +80,7 @@ export const generateEmailReply = async (
       
       case "gemini":
         apiEndpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
-        headers.Authorization = `Bearer ${import.meta.env.VITE_GEMINI_API_KEY || ''}`;
+        headers.Authorization = `Bearer ${apiKey}`;
         requestBody = {
           contents: [
             {
@@ -100,7 +101,7 @@ export const generateEmailReply = async (
       
       case "claude":
         apiEndpoint = "https://api.anthropic.com/v1/messages";
-        headers.Authorization = `Bearer ${import.meta.env.VITE_CLAUDE_API_KEY || ''}`;
+        headers.Authorization = `Bearer ${apiKey}`;
         headers["anthropic-version"] = "2023-06-01";
         requestBody = {
           model: "claude-3-sonnet-20240229",
@@ -118,7 +119,7 @@ export const generateEmailReply = async (
       
       case "mistral":
         apiEndpoint = "https://api.mistral.ai/v1/chat/completions";
-        headers.Authorization = `Bearer ${import.meta.env.VITE_MISTRAL_API_KEY || ''}`;
+        headers.Authorization = `Bearer ${apiKey}`;
         requestBody = {
           model: "mistral-medium",
           messages: [
@@ -138,7 +139,7 @@ export const generateEmailReply = async (
         
       default:
         // Fallback to OpenAI
-        headers.Authorization = `Bearer ${import.meta.env.VITE_OPENAI_API_KEY || ''}`;
+        headers.Authorization = `Bearer ${apiKey}`;
         requestBody = {
           model: "gpt-3.5-turbo",
           messages: [
@@ -156,7 +157,7 @@ export const generateEmailReply = async (
         };
     }
 
-    console.log(`Sending request to ${apiEndpoint}`, { headers, body: requestBody });
+    console.log(`Sending request to ${apiEndpoint}`, { headers: { ...headers, Authorization: "[REDACTED]" }, body: requestBody });
 
     // Call to the selected AI API
     const response = await fetch(apiEndpoint, {

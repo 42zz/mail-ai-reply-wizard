@@ -11,20 +11,20 @@ import { useSettings } from "@/contexts/SettingsContext";
 
 const Index = () => {
   const { toast } = useToast();
-  const { model } = useSettings();
+  const { model, apiKeys } = useSettings();
   const [showResult, setShowResult] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [generatedSubject, setGeneratedSubject] = useState<string | undefined>(undefined);
   const [generatedContent, setGeneratedContent] = useState("");
   
-  // Check for appropriate API key based on selected model
-  const getApiKeyName = () => {
+  // Get the appropriate API key based on selected model
+  const getApiKey = () => {
     switch (model) {
-      case "chatgpt": return "VITE_OPENAI_API_KEY";
-      case "gemini": return "VITE_GEMINI_API_KEY";
-      case "claude": return "VITE_CLAUDE_API_KEY";
-      case "mistral": return "VITE_MISTRAL_API_KEY";
-      default: return "VITE_OPENAI_API_KEY";
+      case "chatgpt": return apiKeys.openai;
+      case "gemini": return apiKeys.gemini;
+      case "claude": return apiKeys.claude;
+      case "mistral": return apiKeys.mistral;
+      default: return apiKeys.openai;
     }
   };
   
@@ -38,7 +38,7 @@ const Index = () => {
     }
   };
   
-  const hasApiKey = !!import.meta.env[getApiKeyName()];
+  const hasApiKey = !!getApiKey();
 
   const handleFormSubmit = async (formData: EmailFormData) => {
     setIsLoading(true);
@@ -46,7 +46,7 @@ const Index = () => {
       if (!hasApiKey) {
         toast({
           title: "APIキーエラー",
-          description: `${getApiKeyDisplayName()} APIキーが設定されていません。環境変数を確認してください。`,
+          description: `${getApiKeyDisplayName()} APIキーが設定されていません。設定画面で追加してください。`,
           variant: "destructive",
         });
         setIsLoading(false);
@@ -63,7 +63,7 @@ const Index = () => {
         model,
       };
 
-      const response = await generateEmailReply(requestData);
+      const response = await generateEmailReply(requestData, getApiKey());
 
       if (response.success) {
         setGeneratedSubject(response.subject);
@@ -112,7 +112,7 @@ const Index = () => {
           <Alert variant="warning" className="mb-6">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              {getApiKeyDisplayName()} APIキーが設定されていません。環境変数「{getApiKeyName()}」にAPIキーを設定してください。
+              {getApiKeyDisplayName()} APIキーが設定されていません。右上の設定ボタンからAPIキーを設定してください。
             </AlertDescription>
           </Alert>
         )}

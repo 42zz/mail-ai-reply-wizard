@@ -1,5 +1,5 @@
 
-import { Cog } from "lucide-react";
+import { Cog, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -19,9 +19,12 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useSettings } from "@/contexts/SettingsContext";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
 
 const SettingsSheet = () => {
-  const { model, setModel, systemPrompt, setSystemPrompt } = useSettings();
+  const { model, setModel, systemPrompt, setSystemPrompt, apiKeys, setApiKey } = useSettings();
+  const [showApiKeys, setShowApiKeys] = useState(false);
 
   return (
     <Sheet>
@@ -35,7 +38,7 @@ const SettingsSheet = () => {
           <span className="sr-only">設定</span>
         </Button>
       </SheetTrigger>
-      <SheetContent>
+      <SheetContent className="overflow-y-auto">
         <SheetHeader>
           <SheetTitle>設定</SheetTitle>
           <SheetDescription>
@@ -59,6 +62,67 @@ const SettingsSheet = () => {
             <p className="text-xs text-muted-foreground">
               メール生成に使用するAIモデルを選択します。高性能なモデルほど品質が向上します。
             </p>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>APIキー設定</Label>
+              <Button
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowApiKeys(!showApiKeys)}
+              >
+                <KeyRound className="h-4 w-4 mr-2" />
+                {showApiKeys ? "非表示" : "表示"}
+              </Button>
+            </div>
+            {showApiKeys && (
+              <div className="space-y-3 pt-2">
+                <div>
+                  <Label htmlFor="openai-key" className="text-xs mb-1 block">OpenAI APIキー</Label>
+                  <Input
+                    id="openai-key"
+                    value={apiKeys.openai}
+                    onChange={(e) => setApiKey("openai", e.target.value)}
+                    placeholder="sk-..."
+                    type="password"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="gemini-key" className="text-xs mb-1 block">Gemini APIキー</Label>
+                  <Input
+                    id="gemini-key"
+                    value={apiKeys.gemini}
+                    onChange={(e) => setApiKey("gemini", e.target.value)}
+                    placeholder="API キーを入力"
+                    type="password"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="claude-key" className="text-xs mb-1 block">Claude APIキー</Label>
+                  <Input
+                    id="claude-key"
+                    value={apiKeys.claude}
+                    onChange={(e) => setApiKey("claude", e.target.value)}
+                    placeholder="API キーを入力"
+                    type="password"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="mistral-key" className="text-xs mb-1 block">Mistral APIキー</Label>
+                  <Input
+                    id="mistral-key"
+                    value={apiKeys.mistral}
+                    onChange={(e) => setApiKey("mistral", e.target.value)}
+                    placeholder="API キーを入力"
+                    type="password"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  APIキーはお使いのブラウザのローカルストレージに保存されます。サーバーには送信されません。
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">

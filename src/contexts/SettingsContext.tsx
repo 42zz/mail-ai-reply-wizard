@@ -6,6 +6,13 @@ interface SettingsContextType {
   setModel: (model: string) => void;
   systemPrompt: string;
   setSystemPrompt: (prompt: string) => void;
+  apiKeys: {
+    openai: string;
+    gemini: string;
+    claude: string;
+    mistral: string;
+  };
+  setApiKey: (provider: string, key: string) => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -40,6 +47,24 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 上記のガイドラインに従って、プロフェッショナルで状況に適したメール返信を作成してください。`
   );
 
+  // Initialize API keys from localStorage or empty strings
+  const [apiKeys, setApiKeys] = useState({
+    openai: localStorage.getItem("openai_api_key") || "",
+    gemini: localStorage.getItem("gemini_api_key") || "",
+    claude: localStorage.getItem("claude_api_key") || "",
+    mistral: localStorage.getItem("mistral_api_key") || "",
+  });
+
+  // Function to update an API key
+  const setApiKey = (provider: string, key: string) => {
+    setApiKeys((prev) => {
+      const newKeys = { ...prev, [provider]: key };
+      // Save to localStorage for persistence
+      localStorage.setItem(`${provider}_api_key`, key);
+      return newKeys;
+    });
+  };
+
   return (
     <SettingsContext.Provider
       value={{
@@ -47,6 +72,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         setModel,
         systemPrompt,
         setSystemPrompt,
+        apiKeys,
+        setApiKey,
       }}
     >
       {children}
