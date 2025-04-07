@@ -1,5 +1,11 @@
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+
+interface SignatureTemplate {
+  id: string;
+  name: string;
+  content: string;
+}
 
 interface SettingsContextType {
   model: string;
@@ -10,6 +16,10 @@ interface SettingsContextType {
     openai: string;
   };
   setApiKey: (provider: string, key: string) => void;
+  signatureTemplates: SignatureTemplate[];
+  addSignatureTemplate: (name: string, content: string) => void;
+  updateSignatureTemplate: (id: string, name: string, content: string) => void;
+  deleteSignatureTemplate: (id: string) => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -51,6 +61,17 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     openai: localStorage.getItem("openai_api_key") || "",
   });
 
+  // Initialize signature templates from localStorage or empty array
+  const [signatureTemplates, setSignatureTemplates] = useState<SignatureTemplate[]>(() => {
+    const savedTemplates = localStorage.getItem("signature_templates");
+    return savedTemplates ? JSON.parse(savedTemplates) : [];
+  });
+
+  // Save signature templates to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("signature_templates", JSON.stringify(signatureTemplates));
+  }, [signatureTemplates]);
+
   // Function to update an API key
   const setApiKey = (provider: string, key: string) => {
     if (provider === "openai") {
@@ -62,6 +83,26 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Function to add a new signature template
+  const addSignatureTemplate = (name: string, content: string) => {
+    const id = Date.now().toString();
+    setSignatureTemplates((prev) => [...prev, { id, name, content }]);
+  };
+
+  // Function to update an existing signature template
+  const updateSignatureTemplate = (id: string, name: string, content: string) => {
+    setSignatureTemplates((prev) =>
+      prev.map((template) =>
+        template.id === id ? { ...template, name, content } : template
+      )
+    );
+  };
+
+  // Function to delete a signature template
+  const deleteSignatureTemplate = (id: string) => {
+    setSignatureTemplates((prev) => prev.filter((template) => template.id !== id));
+  };
+
   return (
     <SettingsContext.Provider
       value={{
@@ -71,6 +112,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         setSystemPrompt,
         apiKeys,
         setApiKey,
+        signatureTemplates,
+        addSignatureTemplate,
+        updateSignatureTemplate,
+        deleteSignatureTemplate,
       }}
     >
       {children}

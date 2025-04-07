@@ -21,7 +21,7 @@ const DateSection = ({ date, setDate }: DateSectionProps) => {
   return (
     <div className="space-y-2">
       <label htmlFor="date" className="block text-sm font-medium">
-        日付
+        送信日
       </label>
       <Popover>
         <PopoverTrigger asChild>
