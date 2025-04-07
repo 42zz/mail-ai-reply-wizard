@@ -21,6 +21,8 @@ import { Label } from "@/components/ui/label";
 import { useSettings } from "@/contexts/SettingsContext";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 const SettingsSheet = () => {
   const { model, setModel, systemPrompt, setSystemPrompt, apiKeys, setApiKey } = useSettings();
@@ -30,7 +32,6 @@ const SettingsSheet = () => {
   const getApiDocLink = () => {
     switch (model) {
       case "gpt4o": return "https://platform.openai.com/api-keys";
-      case "gemini": return "https://ai.google.dev/tutorials/setup";
       case "claude-haiku": return "https://console.anthropic.com/settings/keys";
       default: return "https://platform.openai.com/api-keys";
     }
@@ -65,13 +66,21 @@ const SettingsSheet = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="gpt4o">GPT-4o</SelectItem>
-                <SelectItem value="gemini">Gemini</SelectItem>
-                <SelectItem value="claude-haiku">Claude Haiku</SelectItem>
+                <SelectItem value="claude-haiku">Claude Haiku (実験的)</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
               メール生成に使用するAIモデルを選択します。高性能なモデルほど品質が向上します。
             </p>
+
+            {model === "claude-haiku" && (
+              <Alert variant="warning" className="mt-2">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  ブラウザの制限により、Claude APIには直接アクセスできません。選択した場合、自動的にGPT-4oにフォールバックします。
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -113,24 +122,18 @@ const SettingsSheet = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="gemini-key" className="text-xs mb-1 block">Gemini APIキー</Label>
-                  <Input
-                    id="gemini-key"
-                    value={apiKeys.gemini}
-                    onChange={(e) => setApiKey("gemini", e.target.value)}
-                    placeholder="API キーを入力"
-                    type={showApiKeys ? "text" : "password"}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="claude-key" className="text-xs mb-1 block">Claude APIキー</Label>
+                  <Label htmlFor="claude-key" className="text-xs mb-1 block">Claude APIキー (実験的)</Label>
                   <Input
                     id="claude-key"
                     value={apiKeys.claude}
                     onChange={(e) => setApiKey("claude", e.target.value)}
                     placeholder="API キーを入力"
                     type={showApiKeys ? "text" : "password"}
+                    disabled={true}
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    現在、ブラウザの制限によりClaudeは利用できません
+                  </p>
                 </div>
               </div>
             )}

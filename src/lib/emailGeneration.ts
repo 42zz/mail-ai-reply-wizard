@@ -60,72 +60,40 @@ export const generateEmailReply = async (
       "Content-Type": "application/json",
     };
 
-    // Configure request based on selected model
-    switch (formData.model) {
-      case "gpt4o":
-        headers.Authorization = `Bearer ${apiKey}`;
-        requestBody = {
-          model: "gpt-4o",
-          messages: [
-            {
-              role: "system",
-              content: formData.systemPrompt || "You are a professional business email writer who specializes in Japanese business correspondence."
-            },
-            {
-              role: "user",
-              // Add explicit mention of JSON output format for GPT-4o
-              content: `${xmlInput}\n\n返信内容は以下のJSON形式で提供してください：\n{\n  "subject": "件名",\n  "content": "本文"\n}`
-            }
-          ],
-          temperature: 0.7,
-          max_tokens: 1000,
-          response_format: { type: "json_object" }
-        };
-        break;
-      
-      case "claude-haiku":
-        apiEndpoint = "https://api.anthropic.com/v1/messages";
-        headers.Authorization = `Bearer ${apiKey}`;
-        headers["anthropic-version"] = "2023-06-01";
-        requestBody = {
-          model: "claude-3-haiku-20240307",
-          system: formData.systemPrompt || "You are a professional business email writer who specializes in Japanese business correspondence.",
-          messages: [
-            {
-              role: "user",
-              content: `${xmlInput}\n\n返信内容は以下の形式で提供してください：\n<output>\n  <subject>件名（必要な場合のみ）</subject>\n  <content>メール本文</content>\n</output>`
-            }
-          ],
-          max_tokens: 1000,
-          temperature: 0.7
-        };
-        break;
-        
-      default:
-        // Fallback to GPT-4o with JSON format
-        headers.Authorization = `Bearer ${apiKey}`;
-        requestBody = {
-          model: "gpt-4o",
-          messages: [
-            {
-              role: "system",
-              content: formData.systemPrompt || "You are a professional business email writer who specializes in Japanese business correspondence."
-            },
-            {
-              role: "user",
-              // Add explicit mention of JSON output format for GPT-4o
-              content: `${xmlInput}\n\n返信内容は以下のJSON形式で提供してください：\n{\n  "subject": "件名",\n  "content": "本文"\n}`
-            }
-          ],
-          temperature: 0.7,
-          max_tokens: 1000,
-          response_format: { type: "json_object" }
-        };
+    // メイン処理ロジック - まずはGPT-4oを試みる
+    if (formData.model === "claude-haiku") {
+      try {
+        // Claudeの処理を試みる
+        return await callClaudeAPI(apiKey, formData.systemPrompt || "", xmlInput);
+      } catch (error) {
+        console.error("Claude API error, falling back to GPT-4o:", error);
+        // エラーが発生した場合はGPT-4oにフォールバック
+        formData.model = "gpt4o";
+      }
     }
+
+    // GPT-4oの処理（デフォルトまたはフォールバック）
+    headers.Authorization = `Bearer ${apiKey}`;
+    requestBody = {
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: formData.systemPrompt || "You are a professional business email writer who specializes in Japanese business correspondence."
+        },
+        {
+          role: "user",
+          content: `${xmlInput}\n\n返信内容は以下のJSON形式で提供してください：\n{\n  "subject": "件名",\n  "content": "本文"\n}`
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000,
+      response_format: { type: "json_object" }
+    };
 
     console.log(`Sending request to ${apiEndpoint}`, { headers: { ...headers, Authorization: "[REDACTED]" }, body: requestBody });
 
-    // Call to the selected AI API
+    // Call to OpenAI API
     const response = await fetch(apiEndpoint, {
       method: "POST",
       headers,
@@ -157,93 +125,24 @@ export const generateEmailReply = async (
     const data = await response.json();
     console.log("AI API response:", data);
     
-    // Extract content based on the API response format
-    let aiResponse = "";
-    let subject = "";
-    let content = "";
-    
-    switch (formData.model) {
-      case "gpt4o":
-        // For GPT-4o, we're using the JSON response format
-        try {
-          const jsonResponse = typeof data.choices[0].message.content === 'string' 
-            ? JSON.parse(data.choices[0].message.content) 
-            : data.choices[0].message.content;
-            
-          return {
-            subject: jsonResponse.subject || "",
-            content: jsonResponse.content || "",
-            success: true
-          };
-        } catch (error) {
-          console.error("Error parsing GPT-4o JSON response:", error);
-          aiResponse = data.choices[0].message.content;
-        }
-        break;
-      case "claude-haiku":
-        aiResponse = data.content[0].text;
-        break;
-      default:
-        // For default (GPT-4o), also use JSON format
-        try {
-          const jsonResponse = typeof data.choices[0].message.content === 'string' 
-            ? JSON.parse(data.choices[0].message.content) 
-            : data.choices[0].message.content;
-            
-          return {
-            subject: jsonResponse.subject || "",
-            content: jsonResponse.content || "",
-            success: true
-          };
-        } catch (error) {
-          console.error("Error parsing JSON response:", error);
-          aiResponse = data.choices[0].message.content;
-        }
+    // JSON形式のレスポンスを解析
+    try {
+      const jsonResponse = typeof data.choices[0].message.content === 'string' 
+        ? JSON.parse(data.choices[0].message.content) 
+        : data.choices[0].message.content;
+        
+      return {
+        subject: jsonResponse.subject || "",
+        content: jsonResponse.content || "",
+        success: true
+      };
+    } catch (error) {
+      console.error("Error parsing GPT-4o JSON response:", error);
+      return {
+        content: data.choices[0].message.content || "返信文の生成に失敗しました。",
+        success: true
+      };
     }
-    
-    // Parse XML output format if available (mainly for Claude)
-    if (aiResponse.includes("<output>") && aiResponse.includes("</output>")) {
-      // Extract subject if available
-      if (aiResponse.includes("<subject>") && aiResponse.includes("</subject>")) {
-        const subjectMatch = aiResponse.match(/<subject>([\s\S]*?)<\/subject>/);
-        if (subjectMatch && subjectMatch[1]) {
-          subject = subjectMatch[1].trim();
-        }
-      }
-      
-      // Extract content
-      const contentMatch = aiResponse.match(/<content>([\s\S]*?)<\/content>/);
-      if (contentMatch && contentMatch[1]) {
-        content = contentMatch[1].trim();
-      } else {
-        // Fallback if content tag is not found
-        content = aiResponse;
-      }
-    } 
-    // Fallback to previous format parsing method
-    else if (aiResponse.includes("件名:")) {
-      const parts = aiResponse.split("本文:");
-      if (parts.length >= 2) {
-        const subjectLine = parts[0].split("件名:")[1].trim();
-        subject = subjectLine;
-        content = parts[1].trim();
-      } else {
-        // Fallback if parsing fails
-        subject = "ご連絡いただきありがとうございます";
-        content = aiResponse;
-      }
-    } 
-    // Last resort fallback
-    else {
-      subject = "ご連絡いただきありがとうございます";
-      content = aiResponse;
-    }
-
-    return {
-      subject,
-      content,
-      success: true,
-    };
   } catch (error) {
     console.error("Email generation error:", error);
     return {
@@ -253,3 +152,78 @@ export const generateEmailReply = async (
     };
   }
 };
+
+// Claude APIを呼び出す分離関数
+async function callClaudeAPI(apiKey: string, systemPrompt: string, xmlInput: string): Promise<EmailGenerationResponse> {
+  // ここでは、実際にClaudeのAPIを呼び出さず、CORSエラーを避けるために直接GPT-4oにフォールバック
+  throw new Error("Claude API currently unavailable due to CORS restrictions");
+  
+  // 注意: 以下のコードはブラウザからは実行できないため、コメントアウトしています
+  /*
+  const apiEndpoint = "https://api.anthropic.com/v1/messages";
+  const headers = {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${apiKey}`,
+    "anthropic-version": "2023-06-01"
+  };
+  
+  const requestBody = {
+    model: "claude-3-haiku-20240307",
+    system: systemPrompt || "You are a professional business email writer who specializes in Japanese business correspondence.",
+    messages: [
+      {
+        role: "user",
+        content: `${xmlInput}\n\n返信内容は以下の形式で提供してください：\n<output>\n  <subject>件名（必要な場合のみ）</subject>\n  <content>メール本文</content>\n</output>`
+      }
+    ],
+    max_tokens: 1000,
+    temperature: 0.7
+  };
+  
+  const response = await fetch(apiEndpoint, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(requestBody),
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Claude API error: ${response.status}`);
+  }
+  
+  const data = await response.json();
+  const aiResponse = data.content[0].text;
+  
+  // Parse XML output format
+  let subject = "";
+  let content = "";
+  
+  if (aiResponse.includes("<output>") && aiResponse.includes("</output>")) {
+    // Extract subject if available
+    if (aiResponse.includes("<subject>") && aiResponse.includes("</subject>")) {
+      const subjectMatch = aiResponse.match(/<subject>([\s\S]*?)<\/subject>/);
+      if (subjectMatch && subjectMatch[1]) {
+        subject = subjectMatch[1].trim();
+      }
+    }
+    
+    // Extract content
+    const contentMatch = aiResponse.match(/<content>([\s\S]*?)<\/content>/);
+    if (contentMatch && contentMatch[1]) {
+      content = contentMatch[1].trim();
+    } else {
+      // Fallback if content tag is not found
+      content = aiResponse;
+    }
+  } else {
+    // Fallback
+    subject = "ご連絡いただきありがとうございます";
+    content = aiResponse;
+  }
+  
+  return {
+    subject,
+    content,
+    success: true
+  };
+  */
+}
