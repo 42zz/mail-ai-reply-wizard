@@ -107,18 +107,14 @@ const EmailReplyForm = ({ onSubmit, isLoading }: EmailReplyFormProps) => {
           )}
 
           <Tabs defaultValue="sender" value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-4 mb-6 w-full">
+            <TabsList className="grid grid-cols-3 mb-6 w-full">
               <TabsTrigger value="sender" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
                 <span className="hidden sm:inline">送信者情報</span>
               </TabsTrigger>
-              <TabsTrigger value="recipient" className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                <span className="hidden sm:inline">受信者</span>
-              </TabsTrigger>
-              <TabsTrigger value="message" className="flex items-center gap-2">
+              <TabsTrigger value="recipient-message" className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
-                <span className="hidden sm:inline">受信メッセージ</span>
+                <span className="hidden sm:inline">受信情報</span>
               </TabsTrigger>
               <TabsTrigger value="response" className="flex items-center gap-2">
                 <Pen className="h-4 w-4" />
@@ -136,14 +132,11 @@ const EmailReplyForm = ({ onSubmit, isLoading }: EmailReplyFormProps) => {
               />
             </TabsContent>
 
-            <TabsContent value="recipient" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
+            <TabsContent value="recipient-message" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
               <RecipientSection
                 recipientName={recipientName}
                 setRecipientName={setRecipientName}
               />
-            </TabsContent>
-
-            <TabsContent value="message" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
               <MessageSection
                 receivedMessage={receivedMessage}
                 setReceivedMessage={setReceivedMessage}
@@ -164,7 +157,7 @@ const EmailReplyForm = ({ onSubmit, isLoading }: EmailReplyFormProps) => {
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  const tabs = ["sender", "recipient", "message", "response"];
+                  const tabs = ["sender", "recipient-message", "response"];
                   const currentIndex = tabs.indexOf(activeTab);
                   if (currentIndex > 0) {
                     setActiveTab(tabs[currentIndex - 1]);
@@ -180,7 +173,7 @@ const EmailReplyForm = ({ onSubmit, isLoading }: EmailReplyFormProps) => {
                 type="button"
                 className="ml-auto"
                 onClick={() => {
-                  const tabs = ["sender", "recipient", "message", "response"];
+                  const tabs = ["sender", "recipient-message", "response"];
                   const currentIndex = tabs.indexOf(activeTab);
                   if (currentIndex < tabs.length - 1) {
                     setActiveTab(tabs[currentIndex + 1]);
