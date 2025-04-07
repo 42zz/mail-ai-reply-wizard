@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,6 +33,7 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
   const [responseOutline, setResponseOutline] = useState(initialData?.responseOutline || "");
   const [errors, setErrors] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("sender");
+  const [showErrors, setShowErrors] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -73,6 +73,8 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setShowErrors(true);
+    
     if (!validateForm()) {
       toast({
         title: "エラー",
@@ -124,7 +126,7 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
     <form onSubmit={handleSubmit} className="w-full animate-fade-in">
       <Card className="w-full border-none shadow-lg overflow-hidden glass-card">
         <CardContent className="p-6 sm:p-8">
-          {errors.length > 0 && (
+          {showErrors && errors.length > 0 && (
             <Alert variant="destructive" className="mb-6 animate-slide-in">
               <AlertDescription>
                 <ul className="list-disc pl-5">
@@ -173,6 +175,14 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
                 signature={signature}
                 setSignature={setSignature}
               />
+              <div className="flex justify-end mt-6">
+                <Button
+                  type="button"
+                  onClick={() => setActiveTab("message")}
+                >
+                  次へ
+                </Button>
+              </div>
             </TabsContent>
 
             <TabsContent value="message" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
@@ -193,6 +203,21 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
                 receivedMessage={receivedMessage}
                 setReceivedMessage={setReceivedMessage}
               />
+              <div className="flex justify-between mt-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setActiveTab("sender")}
+                >
+                  戻る
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => setActiveTab("response")}
+                >
+                  次へ
+                </Button>
+              </div>
             </TabsContent>
 
             <TabsContent value="response" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
@@ -213,57 +238,34 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
                 responseOutline={responseOutline}
                 setResponseOutline={setResponseOutline}
               />
+              <div className="flex justify-between mt-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setActiveTab("message")}
+                >
+                  戻る
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={isLoading}
+                  className="bg-gradient-to-r from-blue-500 to-blue-600"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      生成中...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="mr-2 h-4 w-4" />
+                      メールを生成
+                    </>
+                  )}
+                </Button>
+              </div>
             </TabsContent>
           </Tabs>
-
-          <div className="flex justify-between mt-8">
-            {activeTab !== "sender" && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  const tabs = ["sender", "message", "response"];
-                  const currentIndex = tabs.indexOf(activeTab);
-                  if (currentIndex > 0) {
-                    setActiveTab(tabs[currentIndex - 1]);
-                  }
-                }}
-              >
-                前へ
-              </Button>
-            )}
-            
-            {activeTab !== "response" ? (
-              <Button
-                type="button"
-                className="ml-auto"
-                onClick={() => {
-                  const tabs = ["sender", "message", "response"];
-                  const currentIndex = tabs.indexOf(activeTab);
-                  if (currentIndex < tabs.length - 1) {
-                    setActiveTab(tabs[currentIndex + 1]);
-                  }
-                }}
-              >
-                次へ
-              </Button>
-            ) : (
-              <Button 
-                type="submit" 
-                className="ml-auto transition-all duration-200 hover:shadow-md hover:scale-[1.01] bg-gradient-to-r from-blue-500 to-blue-600"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    生成中...
-                  </>
-                ) : (
-                  "メール返信を生成"
-                )}
-              </Button>
-            )}
-          </div>
         </CardContent>
       </Card>
     </form>

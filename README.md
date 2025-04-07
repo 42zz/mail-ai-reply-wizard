@@ -1,73 +1,49 @@
-# Welcome to your Lovable project
+# Mail AI Reply Wizard
 
-## Project info
+AI を活用してメールの返信作成を支援するウェブアプリケーションです。shadcn/ui と Tailwind CSS を使用したモダンなインターフェースを備えています。
 
-**URL**: https://lovable.dev/projects/92d21ffc-1c50-4215-b8af-93c6a808b1b3
+## 技術スタック
 
-## How can I edit this code?
+このプロジェクトは以下の技術を使用して構築されています:
 
-There are several ways of editing your application.
+-   Vite
+-   React
+-   TypeScript
+-   shadcn/ui
+-   Tailwind CSS
+-   ESLint
 
-**Use Lovable**
+## セットアップと実行
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/92d21ffc-1c50-4215-b8af-93c6a808b1b3) and start prompting.
+### 前提条件
 
-Changes made via Lovable will be committed automatically to this repo.
+-   Node.js (推奨: [nvm](https://github.com/nvm-sh/nvm#installing-and-updating) を使用)
+-   npm または bun
 
-**Use your preferred IDE**
+### 手順
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+1.  **リポジトリをクローン:**
+    ```bash
+    git clone <YOUR_GIT_URL>
+    cd mail-ai-reply-wizard
+    ```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+2.  **依存関係をインストール:**
+    ```bash
+    npm install
+    # または bun install
+    ```
 
-Follow these steps:
+3.  **開発サーバーを起動:**
+    ```bash
+    npm run dev
+    # または bun run dev
+    ```
+    これにより、開発サーバーが起動し、ブラウザでアプリケーションが表示されます（通常は `http://localhost:5173`）。ファイルの変更は自動的に反映されます。
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 利用可能なスクリプト
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/92d21ffc-1c50-4215-b8af-93c6a808b1b3) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes it is!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+-   `npm run dev`: 開発モードで Vite サーバーを起動します。
+-   `npm run build`: プロダクション用にアプリケーションをビルドします。
+-   `npm run lint`: ESLint を使用してコードの静的解析を実行します。
+-   `npm run preview`: ビルドされたプロダクションコードをローカルでプレビューします。

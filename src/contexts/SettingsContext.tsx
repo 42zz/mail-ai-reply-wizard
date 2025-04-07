@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
 interface SignatureTemplate {
@@ -20,6 +19,10 @@ interface SettingsContextType {
   addSignatureTemplate: (name: string, content: string) => void;
   updateSignatureTemplate: (id: string, name: string, content: string) => void;
   deleteSignatureTemplate: (id: string) => void;
+  styleExamples: string[];
+  addStyleExample: (example: string) => void;
+  updateStyleExample: (index: number, example: string) => void;
+  deleteStyleExample: (index: number) => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -103,6 +106,36 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     setSignatureTemplates((prev) => prev.filter((template) => template.id !== id));
   };
 
+  // Initialize style examples from localStorage or empty array
+  const [styleExamples, setStyleExamples] = useState<string[]>(() => {
+    const savedExamples = localStorage.getItem("style_examples");
+    return savedExamples ? JSON.parse(savedExamples) : [];
+  });
+
+  // Save style examples to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("style_examples", JSON.stringify(styleExamples));
+  }, [styleExamples]);
+
+  // Function to add a new style example
+  const addStyleExample = (example: string) => {
+    if (styleExamples.length < 5) {
+      setStyleExamples((prev) => [...prev, example]);
+    }
+  };
+
+  // Function to update an existing style example
+  const updateStyleExample = (index: number, example: string) => {
+    setStyleExamples((prev) =>
+      prev.map((ex, i) => (i === index ? example : ex))
+    );
+  };
+
+  // Function to delete a style example
+  const deleteStyleExample = (index: number) => {
+    setStyleExamples((prev) => prev.filter((_, i) => i !== index));
+  };
+
   return (
     <SettingsContext.Provider
       value={{
@@ -116,6 +149,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         addSignatureTemplate,
         updateSignatureTemplate,
         deleteSignatureTemplate,
+        styleExamples,
+        addStyleExample,
+        updateStyleExample,
+        deleteStyleExample,
       }}
     >
       {children}
