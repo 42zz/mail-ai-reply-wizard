@@ -57,6 +57,26 @@ export const generateEmailReply = async (
 
     // Configure request based on selected model
     switch (formData.model) {
+      case "gpt4o":
+        headers.Authorization = `Bearer ${apiKey}`;
+        requestBody = {
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: formData.systemPrompt || "You are a professional business email writer who specializes in Japanese business correspondence."
+            },
+            {
+              role: "user",
+              content: xmlInput
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 1000,
+          response_format: { type: "json_object" }
+        };
+        break;
+        
       case "chatgpt":
         headers.Authorization = `Bearer ${apiKey}`;
         requestBody = {
@@ -97,6 +117,24 @@ export const generateEmailReply = async (
         };
         break;
       
+      case "claude-haiku":
+        apiEndpoint = "https://api.anthropic.com/v1/messages";
+        headers.Authorization = `Bearer ${apiKey}`;
+        headers["anthropic-version"] = "2023-06-01";
+        requestBody = {
+          model: "claude-3-haiku-20240307",
+          system: formData.systemPrompt || "You are a professional business email writer who specializes in Japanese business correspondence.",
+          messages: [
+            {
+              role: "user",
+              content: xmlInput
+            }
+          ],
+          max_tokens: 1000,
+          temperature: 0.7
+        };
+        break;
+        
       case "claude":
         apiEndpoint = "https://api.anthropic.com/v1/messages";
         headers.Authorization = `Bearer ${apiKey}`;
@@ -193,9 +231,27 @@ export const generateEmailReply = async (
     let aiResponse = "";
     
     switch (formData.model) {
+      case "gpt4o":
+        // For GPT-4o, we're using the JSON response format
+        try {
+          const jsonResponse = typeof data.choices[0].message.content === 'string' 
+            ? JSON.parse(data.choices[0].message.content) 
+            : data.choices[0].message.content;
+            
+          return {
+            subject: jsonResponse.subject || "",
+            content: jsonResponse.content || "",
+            success: true
+          };
+        } catch (error) {
+          console.error("Error parsing GPT-4o JSON response:", error);
+          aiResponse = data.choices[0].message.content;
+        }
+        break;
       case "gemini":
         aiResponse = data.candidates[0].content.parts[0].text;
         break;
+      case "claude-haiku":
       case "claude":
         aiResponse = data.content[0].text;
         break;

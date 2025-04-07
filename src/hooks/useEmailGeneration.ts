@@ -17,8 +17,10 @@ export function useEmailGeneration() {
   const getApiKey = () => {
     switch (model) {
       case "chatgpt": return apiKeys.openai;
+      case "gpt4o": return apiKeys.openai;  // Uses the same OpenAI key
       case "gemini": return apiKeys.gemini;
       case "claude": return apiKeys.claude;
+      case "claude-haiku": return apiKeys.claude;  // Uses the same Claude key
       case "mistral": return apiKeys.mistral;
       default: return apiKeys.openai;
     }

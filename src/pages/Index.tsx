@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import EmailReplyForm, { EmailFormData } from "@/components/EmailReplyForm";
 import EmailReplyResult from "@/components/EmailReplyResult";
-import { generateEmailReply } from "@/lib/emailGeneration";
+import { useEmailGeneration } from "@/hooks/useEmailGeneration";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Sparkles, AlertTriangle, Settings } from "lucide-react";
@@ -13,6 +12,7 @@ import { Button } from "@/components/ui/button";
 const Index = () => {
   const { toast } = useToast();
   const { model, apiKeys } = useSettings();
+  const { generateEmail } = useEmailGeneration();
   const [showResult, setShowResult] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [generatedSubject, setGeneratedSubject] = useState<string | undefined>(undefined);
@@ -22,8 +22,10 @@ const Index = () => {
   const getApiKey = () => {
     switch (model) {
       case "chatgpt": return apiKeys.openai;
+      case "gpt4o": return apiKeys.openai;  // Uses the same OpenAI key
       case "gemini": return apiKeys.gemini;
       case "claude": return apiKeys.claude;
+      case "claude-haiku": return apiKeys.claude;  // Uses the same Claude key
       case "mistral": return apiKeys.mistral;
       default: return apiKeys.openai;
     }
@@ -32,8 +34,10 @@ const Index = () => {
   const getApiKeyDisplayName = () => {
     switch (model) {
       case "chatgpt": return "OpenAI";
+      case "gpt4o": return "OpenAI";
       case "gemini": return "Gemini";
       case "claude": return "Claude";
+      case "claude-haiku": return "Claude";
       case "mistral": return "Mistral";
       default: return "OpenAI";
     }
@@ -64,7 +68,7 @@ const Index = () => {
         model,
       };
 
-      const response = await generateEmailReply(requestData, getApiKey());
+      const response = await generateEmail(formData);
 
       if (response.success) {
         setGeneratedSubject(response.subject);
