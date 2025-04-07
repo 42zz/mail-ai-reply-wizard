@@ -9,11 +9,12 @@ import MessageSection from "./MessageSection";
 import ResponseOutlineSection from "./ResponseOutlineSection";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Mail, User, MessageSquare, Pen } from "lucide-react";
+import { Loader2, Mail, User, MessageSquare, Pen, Trash2 } from "lucide-react";
 
 interface EmailReplyFormProps {
   onSubmit: (formData: EmailFormData) => void;
   isLoading: boolean;
+  initialData?: EmailFormData;
 }
 
 export interface EmailFormData {
@@ -24,23 +25,31 @@ export interface EmailFormData {
   responseOutline: string;
 }
 
-const EmailReplyForm = ({ onSubmit, isLoading }: EmailReplyFormProps) => {
+const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProps) => {
   const { toast } = useToast();
-  const [date, setDate] = useState<Date>(new Date());
-  const [senderName, setSenderName] = useState("");
-  const [signature, setSignature] = useState("");
-  const [receivedMessage, setReceivedMessage] = useState("");
-  const [responseOutline, setResponseOutline] = useState("");
+  const [date, setDate] = useState<Date>(initialData?.date || new Date());
+  const [senderName, setSenderName] = useState(initialData?.senderName || "");
+  const [signature, setSignature] = useState(initialData?.signature || "");
+  const [receivedMessage, setReceivedMessage] = useState(initialData?.receivedMessage || "");
+  const [responseOutline, setResponseOutline] = useState(initialData?.responseOutline || "");
   const [errors, setErrors] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("sender");
 
   useEffect(() => {
-    const savedSenderName = localStorage.getItem('senderName');
-    const savedSignature = localStorage.getItem('signature');
+    if (initialData) {
+      setDate(initialData.date);
+      setSenderName(initialData.senderName);
+      setSignature(initialData.signature);
+      setReceivedMessage(initialData.receivedMessage);
+      setResponseOutline(initialData.responseOutline);
+    } else {
+      const savedSenderName = localStorage.getItem('senderName');
+      const savedSignature = localStorage.getItem('signature');
 
-    if (savedSenderName) setSenderName(savedSenderName);
-    if (savedSignature) setSignature(savedSignature);
-  }, []);
+      if (savedSenderName) setSenderName(savedSenderName);
+      if (savedSignature) setSignature(savedSignature);
+    }
+  }, [initialData]);
 
   useEffect(() => {
     if (senderName) {
@@ -85,6 +94,27 @@ const EmailReplyForm = ({ onSubmit, isLoading }: EmailReplyFormProps) => {
     onSubmit(formData);
   };
 
+  const clearField = (field: "sender" | "message" | "response") => {
+    switch (field) {
+      case "sender":
+        setDate(new Date());
+        setSenderName("");
+        setSignature("");
+        break;
+      case "message":
+        setReceivedMessage("");
+        break;
+      case "response":
+        setResponseOutline("");
+        break;
+    }
+
+    toast({
+      title: "クリアしました",
+      description: "入力内容を削除しました",
+    });
+  };
+
   return (
     <form onSubmit={handleSubmit} className="w-full animate-fade-in">
       <Card className="w-full border-none shadow-lg overflow-hidden glass-card">
@@ -118,6 +148,19 @@ const EmailReplyForm = ({ onSubmit, isLoading }: EmailReplyFormProps) => {
             </TabsList>
 
             <TabsContent value="sender" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-lg font-medium">送信者情報</h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => clearField("sender")}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  クリア
+                </Button>
+              </div>
               <DateSection date={date} setDate={setDate} />
               <SenderSection
                 senderName={senderName}
@@ -128,6 +171,19 @@ const EmailReplyForm = ({ onSubmit, isLoading }: EmailReplyFormProps) => {
             </TabsContent>
 
             <TabsContent value="message" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-lg font-medium">受信メッセージ</h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => clearField("message")}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  クリア
+                </Button>
+              </div>
               <MessageSection
                 receivedMessage={receivedMessage}
                 setReceivedMessage={setReceivedMessage}
@@ -135,6 +191,19 @@ const EmailReplyForm = ({ onSubmit, isLoading }: EmailReplyFormProps) => {
             </TabsContent>
 
             <TabsContent value="response" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-lg font-medium">返信概要</h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => clearField("response")}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  クリア
+                </Button>
+              </div>
               <ResponseOutlineSection
                 responseOutline={responseOutline}
                 setResponseOutline={setResponseOutline}

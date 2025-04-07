@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import EmailReplyForm, { EmailFormData } from "@/components/EmailReplyForm";
 import EmailReplyResult from "@/components/EmailReplyResult";
@@ -16,6 +17,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedSubject, setGeneratedSubject] = useState<string | undefined>(undefined);
   const [generatedContent, setGeneratedContent] = useState("");
+  const [currentFormData, setCurrentFormData] = useState<EmailFormData | undefined>(undefined);
   
   const hasApiKey = !!apiKeys.openai && apiKeys.openai.trim() !== "";
 
@@ -31,6 +33,9 @@ const Index = () => {
         setIsLoading(false);
         return;
       }
+
+      // Save the current form data for potential editing later
+      setCurrentFormData(formData);
 
       const response = await generateEmail(formData);
 
@@ -70,6 +75,12 @@ const Index = () => {
 
   const handleReset = () => {
     setShowResult(false);
+    setCurrentFormData(undefined);
+  };
+
+  const handleEdit = () => {
+    setShowResult(false);
+    // Current form data is preserved, allowing the form to be pre-filled
   };
 
   // Function to open settings sheet
@@ -121,9 +132,14 @@ const Index = () => {
               subject={generatedSubject}
               content={generatedContent}
               onReset={handleReset}
+              onEdit={handleEdit}
             />
           ) : (
-            <EmailReplyForm onSubmit={handleFormSubmit} isLoading={isLoading} />
+            <EmailReplyForm 
+              onSubmit={handleFormSubmit} 
+              isLoading={isLoading} 
+              initialData={currentFormData}
+            />
           )}
         </div>
         

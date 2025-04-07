@@ -5,15 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, RefreshCcw, Check } from "lucide-react";
+import { Copy, RefreshCcw, Check, Edit } from "lucide-react";
 
 interface EmailReplyResultProps {
   subject?: string;
   content: string;
   onReset: () => void;
+  onEdit: () => void;
 }
 
-const EmailReplyResult = ({ subject, content, onReset }: EmailReplyResultProps) => {
+const EmailReplyResult = ({ subject, content, onReset, onEdit }: EmailReplyResultProps) => {
   const { toast } = useToast();
   const [isSubjectCopied, setIsSubjectCopied] = useState(false);
   const [isContentCopied, setIsContentCopied] = useState(false);
@@ -118,7 +119,15 @@ const EmailReplyResult = ({ subject, content, onReset }: EmailReplyResultProps) 
               onClick={onReset}
             >
               <RefreshCcw className="h-4 w-4 mr-2" />
-              フォームに戻る
+              新規作成
+            </Button>
+            <Button
+              variant="secondary"
+              className="flex-1"
+              onClick={onEdit}
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              入力を編集
             </Button>
             <Button
               variant="default"
