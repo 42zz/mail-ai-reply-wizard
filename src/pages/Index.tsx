@@ -104,6 +104,15 @@ const Index = () => {
     setShowResult(false);
   };
 
+  // Function to open settings sheet
+  const openSettings = () => {
+    // Find the settings button by aria-label and click it
+    const settingsButton = document.querySelector('[aria-label="設定"]') as HTMLButtonElement;
+    if (settingsButton) {
+      settingsButton.click();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-12">
       <div className="container px-4 sm:px-6 lg:px-8 max-w-4xl">
@@ -129,7 +138,7 @@ const Index = () => {
                 variant="outline" 
                 size="sm" 
                 className="ml-2 whitespace-nowrap"
-                onClick={() => document.querySelector('[aria-label="設定"]')?.click()}
+                onClick={openSettings}
               >
                 <Settings className="h-4 w-4 mr-1" />
                 設定を開く

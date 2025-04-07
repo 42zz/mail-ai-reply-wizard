@@ -32,32 +32,20 @@ export const generateEmailReply = async (
     }
 
     console.log("Sending request to AI API with data:", formData);
-
-    // Format the date in Japanese style for the prompt
-    const dateObj = new Date(formData.date);
-    const year = dateObj.getFullYear();
-    const month = dateObj.getMonth() + 1;
-    const day = dateObj.getDate();
     
-    // Create a prompt for the AI model
-    const prompt = `
-あなたは優れたビジネスメール作成の専門家です。
-以下の情報を元に、日本語の丁寧なビジネスメールの返信を作成してください。
-
-日付: ${year}年${month}月${day}日
-送信者: ${formData.sender_name}
-署名: ${formData.signatures}
-受信者: ${formData.recipient_name}
-受信したメッセージ: ${formData.received_message}
-返信の要点: ${formData.response_outline}
-
-日本の季節や社会的なマナーに合わせた適切な挨拶から始め、受信メッセージへの応答と返信要点を含む本文、
-そして丁寧な締めの言葉と署名を含めてください。
-
-メールの件名と本文を分けて出力してください。フォーマットは以下の通りです:
-件名: [ここに件名]
-本文:
-[ここに本文]
+    // Format input data as XML
+    const promptTemplate = formData.systemPrompt || `あなたはプロフェッショナルなメール返信支援AIです。`;
+    
+    // Create XML formatted input
+    const xmlInput = `
+<input>
+  <date>${formData.date}</date>
+  <signatures>${formData.signatures}</signatures>
+  <sender_name>${formData.sender_name}</sender_name>
+  <recipient_name>${formData.recipient_name}</recipient_name>
+  <received_message>${formData.received_message}</received_message>
+  <response_outline>${formData.response_outline}</response_outline>
+</input>
 `;
 
     // Map the selected model to OpenAI model or handle other APIs based on selection
@@ -80,7 +68,7 @@ export const generateEmailReply = async (
             },
             {
               role: "user",
-              content: prompt
+              content: xmlInput
             }
           ],
           temperature: 0.7,
@@ -97,7 +85,7 @@ export const generateEmailReply = async (
               role: "user",
               parts: [
                 {
-                  text: `${formData.systemPrompt || "あなたは日本語のビジネスメール作成の専門家です。"}\n\n${prompt}`
+                  text: `${formData.systemPrompt || "あなたは日本語のビジネスメール作成の専門家です。"}\n\n${xmlInput}`
                 }
               ]
             }
@@ -119,7 +107,7 @@ export const generateEmailReply = async (
           messages: [
             {
               role: "user",
-              content: prompt
+              content: xmlInput
             }
           ],
           max_tokens: 1000,
@@ -139,7 +127,7 @@ export const generateEmailReply = async (
             },
             {
               role: "user",
-              content: prompt
+              content: xmlInput
             }
           ],
           temperature: 0.7,
@@ -159,7 +147,7 @@ export const generateEmailReply = async (
             },
             {
               role: "user",
-              content: prompt
+              content: xmlInput
             }
           ],
           temperature: 0.7,
@@ -219,11 +207,31 @@ export const generateEmailReply = async (
         aiResponse = data.choices[0].message.content;
     }
     
-    // Parse the API response to extract subject and content
+    // Parse XML output format if available
     let subject = "";
     let content = "";
     
-    if (aiResponse.includes("件名:")) {
+    // Try to parse XML output format
+    if (aiResponse.includes("<output>") && aiResponse.includes("</output>")) {
+      // Extract subject if available
+      if (aiResponse.includes("<subject>") && aiResponse.includes("</subject>")) {
+        const subjectMatch = aiResponse.match(/<subject>([\s\S]*?)<\/subject>/);
+        if (subjectMatch && subjectMatch[1]) {
+          subject = subjectMatch[1].trim();
+        }
+      }
+      
+      // Extract content
+      const contentMatch = aiResponse.match(/<content>([\s\S]*?)<\/content>/);
+      if (contentMatch && contentMatch[1]) {
+        content = contentMatch[1].trim();
+      } else {
+        // Fallback if content tag is not found
+        content = aiResponse;
+      }
+    } 
+    // Fallback to previous format parsing method
+    else if (aiResponse.includes("件名:")) {
       const parts = aiResponse.split("本文:");
       if (parts.length >= 2) {
         const subjectLine = parts[0].split("件名:")[1].trim();
@@ -234,8 +242,9 @@ export const generateEmailReply = async (
         subject = "ご連絡いただきありがとうございます";
         content = aiResponse;
       }
-    } else {
-      // Fallback if format is not as expected
+    } 
+    // Last resort fallback
+    else {
       subject = "ご連絡いただきありがとうございます";
       content = aiResponse;
     }
