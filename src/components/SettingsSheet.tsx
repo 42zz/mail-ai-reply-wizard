@@ -1,5 +1,5 @@
 
-import { Cog, KeyRound } from "lucide-react";
+import { Cog, KeyRound, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -26,6 +26,17 @@ const SettingsSheet = () => {
   const { model, setModel, systemPrompt, setSystemPrompt, apiKeys, setApiKey } = useSettings();
   const [showApiKeys, setShowApiKeys] = useState(false);
 
+  // APIプロバイダーのドキュメントへのリンク
+  const getApiDocLink = () => {
+    switch (model) {
+      case "chatgpt": return "https://platform.openai.com/api-keys";
+      case "gemini": return "https://ai.google.dev/tutorials/setup";
+      case "claude": return "https://console.anthropic.com/settings/keys";
+      case "mistral": return "https://console.mistral.ai/api-keys/";
+      default: return "https://platform.openai.com/api-keys";
+    }
+  };
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -33,6 +44,7 @@ const SettingsSheet = () => {
           variant="ghost"
           size="icon"
           className="absolute top-4 right-4 z-10"
+          aria-label="設定"
         >
           <Cog className="h-5 w-5" />
           <span className="sr-only">設定</span>
@@ -67,14 +79,28 @@ const SettingsSheet = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>APIキー設定</Label>
-              <Button
-                variant="outline" 
-                size="sm"
-                onClick={() => setShowApiKeys(!showApiKeys)}
-              >
-                <KeyRound className="h-4 w-4 mr-2" />
-                {showApiKeys ? "非表示" : "表示"}
-              </Button>
+              <div className="flex space-x-2">
+                <a
+                  href={getApiDocLink()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center text-xs text-blue-600 hover:underline"
+                >
+                  APIキーを取得 <ExternalLink className="h-3 w-3 ml-1" />
+                </a>
+                <Button
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowApiKeys(!showApiKeys)}
+                >
+                  <KeyRound className="h-4 w-4 mr-2" />
+                  {showApiKeys ? "非表示" : "表示"}
+                </Button>
+              </div>
+            </div>
+            <div className="bg-yellow-50 border border-yellow-200 p-3 rounded text-sm text-yellow-800">
+              APIキーはお使いのブラウザのローカルストレージに保存され、サーバーには送信されません。
+              当アプリはAPIキーを使ってAIモデルに直接リクエストを送信します。
             </div>
             {showApiKeys && (
               <div className="space-y-3 pt-2">
@@ -85,7 +111,7 @@ const SettingsSheet = () => {
                     value={apiKeys.openai}
                     onChange={(e) => setApiKey("openai", e.target.value)}
                     placeholder="sk-..."
-                    type="password"
+                    type={showApiKeys ? "text" : "password"}
                   />
                 </div>
                 <div>
@@ -95,7 +121,7 @@ const SettingsSheet = () => {
                     value={apiKeys.gemini}
                     onChange={(e) => setApiKey("gemini", e.target.value)}
                     placeholder="API キーを入力"
-                    type="password"
+                    type={showApiKeys ? "text" : "password"}
                   />
                 </div>
                 <div>
@@ -105,7 +131,7 @@ const SettingsSheet = () => {
                     value={apiKeys.claude}
                     onChange={(e) => setApiKey("claude", e.target.value)}
                     placeholder="API キーを入力"
-                    type="password"
+                    type={showApiKeys ? "text" : "password"}
                   />
                 </div>
                 <div>
@@ -115,12 +141,9 @@ const SettingsSheet = () => {
                     value={apiKeys.mistral}
                     onChange={(e) => setApiKey("mistral", e.target.value)}
                     placeholder="API キーを入力"
-                    type="password"
+                    type={showApiKeys ? "text" : "password"}
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  APIキーはお使いのブラウザのローカルストレージに保存されます。サーバーには送信されません。
-                </p>
               </div>
             )}
           </div>

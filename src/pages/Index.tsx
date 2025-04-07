@@ -5,9 +5,10 @@ import EmailReplyResult from "@/components/EmailReplyResult";
 import { generateEmailReply } from "@/lib/emailGeneration";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Sparkles, AlertTriangle } from "lucide-react";
+import { Mail, Sparkles, AlertTriangle, Settings } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSettings } from "@/contexts/SettingsContext";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const { toast } = useToast();
@@ -38,7 +39,7 @@ const Index = () => {
     }
   };
   
-  const hasApiKey = !!getApiKey();
+  const hasApiKey = !!getApiKey() && getApiKey().trim() !== "";
 
   const handleFormSubmit = async (formData: EmailFormData) => {
     setIsLoading(true);
@@ -70,9 +71,20 @@ const Index = () => {
         setGeneratedContent(response.content);
         setShowResult(true);
       } else {
+        // エラーの種類に基づいたメッセージを表示
+        let errorMessage = "メール生成中にエラーが発生しました。もう一度お試しください。";
+        
+        if (response.error === "API_KEY_MISSING") {
+          errorMessage = `${getApiKeyDisplayName()} APIキーが設定されていません。設定画面で追加してください。`;
+        } else if (response.error === "INVALID_API_KEY") {
+          errorMessage = `${getApiKeyDisplayName()} APIキーが無効です。設定画面で正しいAPIキーを設定してください。`;
+        } else if (response.error === "RATE_LIMIT_EXCEEDED") {
+          errorMessage = "APIリクエスト制限に達しました。しばらく時間をおいてから再試行してください。";
+        }
+        
         toast({
           title: "エラー",
-          description: "メール生成中にエラーが発生しました。もう一度お試しください。",
+          description: errorMessage,
           variant: "destructive",
         });
       }
@@ -111,8 +123,17 @@ const Index = () => {
         {!hasApiKey && (
           <Alert variant="warning" className="mb-6">
             <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              {getApiKeyDisplayName()} APIキーが設定されていません。右上の設定ボタンからAPIキーを設定してください。
+            <AlertDescription className="flex items-center justify-between">
+              <span>{getApiKeyDisplayName()} APIキーが設定されていません。右上の設定ボタンからAPIキーを設定してください。</span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="ml-2 whitespace-nowrap"
+                onClick={() => document.querySelector('[aria-label="設定"]')?.click()}
+              >
+                <Settings className="h-4 w-4 mr-1" />
+                設定を開く
+              </Button>
             </AlertDescription>
           </Alert>
         )}

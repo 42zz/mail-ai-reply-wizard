@@ -14,6 +14,7 @@ interface EmailGenerationResponse {
   subject?: string;
   content: string;
   success: boolean;
+  error?: string;
 }
 
 export const generateEmailReply = async (
@@ -21,6 +22,15 @@ export const generateEmailReply = async (
   apiKey: string
 ): Promise<EmailGenerationResponse> => {
   try {
+    // APIキーが空の場合はエラーを返す
+    if (!apiKey || apiKey.trim() === "") {
+      return {
+        content: "APIキーが設定されていません。設定画面から適切なAPIキーを設定してください。",
+        success: false,
+        error: "API_KEY_MISSING"
+      };
+    }
+
     console.log("Sending request to AI API with data:", formData);
 
     // Format the date in Japanese style for the prompt
@@ -169,6 +179,22 @@ export const generateEmailReply = async (
     if (!response.ok) {
       const errorData = await response.json();
       console.error("AI API error:", errorData);
+      
+      // APIエラーの種類に基づいたメッセージを返す
+      if (response.status === 401) {
+        return {
+          content: "APIキーの認証に失敗しました。設定画面から正しいAPIキーを設定してください。",
+          success: false,
+          error: "INVALID_API_KEY"
+        };
+      } else if (response.status === 429) {
+        return {
+          content: "APIリクエスト制限に達しました。しばらく時間をおいてから再試行してください。",
+          success: false,
+          error: "RATE_LIMIT_EXCEEDED"
+        };
+      }
+      
       throw new Error(`API error: ${response.status}`);
     }
 
@@ -224,6 +250,7 @@ export const generateEmailReply = async (
     return {
       content: "メール生成中にエラーが発生しました。もう一度お試しください。",
       success: false,
+      error: "GENERATION_ERROR"
     };
   }
 };
