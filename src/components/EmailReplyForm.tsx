@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -89,10 +90,10 @@ const EmailReplyForm = ({ onSubmit, isLoading }: EmailReplyFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="w-full animate-fade-in">
-      <Card className="w-full">
-        <CardContent className="pt-6">
+      <Card className="w-full border-none shadow-lg overflow-hidden glass-card">
+        <CardContent className="p-6 sm:p-8">
           {errors.length > 0 && (
-            <Alert variant="destructive" className="mb-6">
+            <Alert variant="destructive" className="mb-6 animate-slide-in">
               <AlertDescription>
                 <ul className="list-disc pl-5">
                   {errors.map((error, index) => (
@@ -128,7 +129,11 @@ const EmailReplyForm = ({ onSubmit, isLoading }: EmailReplyFormProps) => {
               setResponseOutline={setResponseOutline}
             />
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button 
+              type="submit" 
+              className="w-full transition-all duration-200 hover:shadow-md hover:scale-[1.01] bg-gradient-to-r from-blue-500 to-blue-600"
+              disabled={isLoading}
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

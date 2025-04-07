@@ -5,7 +5,7 @@ import EmailReplyResult from "@/components/EmailReplyResult";
 import { generateEmailReply } from "@/lib/emailGeneration";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { Mail } from "lucide-react";
+import { Mail, Sparkles } from "lucide-react";
 
 const Index = () => {
   const { toast } = useToast();
@@ -56,13 +56,16 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-12">
       <div className="container px-4 sm:px-6 lg:px-8 max-w-4xl">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center p-3 bg-blue-100 rounded-full mb-4">
+        <div className="text-center mb-12 animate-fade-in">
+          <div className="inline-flex items-center justify-center p-3 bg-blue-100 rounded-full mb-4 shadow-inner">
             <Mail className="h-8 w-8 text-blue-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">メール返信AI作成ツール</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-3 flex items-center justify-center gap-2">
+            メール返信AI作成ツール
+            <Sparkles className="h-5 w-5 text-yellow-500" />
+          </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             必要な情報を入力するだけで、AIが適切なビジネスメールの返信文を生成します。
           </p>
@@ -80,7 +83,7 @@ const Index = () => {
           )}
         </div>
         
-        <div className="mt-8 text-center text-gray-500 text-sm">
+        <div className="mt-12 text-center text-gray-500 text-sm">
           <p>© 2025 メール返信AI作成ツール</p>
         </div>
       </div>
