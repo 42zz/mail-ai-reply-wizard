@@ -7,14 +7,38 @@ import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Sparkles, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useSettings } from "@/contexts/SettingsContext";
 
 const Index = () => {
   const { toast } = useToast();
+  const { model } = useSettings();
   const [showResult, setShowResult] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [generatedSubject, setGeneratedSubject] = useState<string | undefined>(undefined);
   const [generatedContent, setGeneratedContent] = useState("");
-  const hasApiKey = !!import.meta.env.VITE_OPENAI_API_KEY;
+  
+  // Check for appropriate API key based on selected model
+  const getApiKeyName = () => {
+    switch (model) {
+      case "chatgpt": return "VITE_OPENAI_API_KEY";
+      case "gemini": return "VITE_GEMINI_API_KEY";
+      case "claude": return "VITE_CLAUDE_API_KEY";
+      case "mistral": return "VITE_MISTRAL_API_KEY";
+      default: return "VITE_OPENAI_API_KEY";
+    }
+  };
+  
+  const getApiKeyDisplayName = () => {
+    switch (model) {
+      case "chatgpt": return "OpenAI";
+      case "gemini": return "Gemini";
+      case "claude": return "Claude";
+      case "mistral": return "Mistral";
+      default: return "OpenAI";
+    }
+  };
+  
+  const hasApiKey = !!import.meta.env[getApiKeyName()];
 
   const handleFormSubmit = async (formData: EmailFormData) => {
     setIsLoading(true);
@@ -22,7 +46,7 @@ const Index = () => {
       if (!hasApiKey) {
         toast({
           title: "APIキーエラー",
-          description: "OpenAI APIキーが設定されていません。環境変数を確認してください。",
+          description: `${getApiKeyDisplayName()} APIキーが設定されていません。環境変数を確認してください。`,
           variant: "destructive",
         });
         setIsLoading(false);
@@ -36,6 +60,7 @@ const Index = () => {
         recipient_name: formData.recipientName,
         received_message: formData.receivedMessage,
         response_outline: formData.responseOutline,
+        model,
       };
 
       const response = await generateEmailReply(requestData);
@@ -87,7 +112,7 @@ const Index = () => {
           <Alert variant="warning" className="mb-6">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              OpenAI APIキーが設定されていません。環境変数「VITE_OPENAI_API_KEY」にAPIキーを設定してください。
+              {getApiKeyDisplayName()} APIキーが設定されていません。環境変数「{getApiKeyName()}」にAPIキーを設定してください。
             </AlertDescription>
           </Alert>
         )}

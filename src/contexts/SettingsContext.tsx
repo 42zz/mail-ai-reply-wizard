@@ -11,7 +11,7 @@ interface SettingsContextType {
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
-  const [model, setModel] = useState("gpt-3.5-turbo");
+  const [model, setModel] = useState("chatgpt");
   const [systemPrompt, setSystemPrompt] = useState(
     "You are a professional business email writer who specializes in Japanese business correspondence."
   );

@@ -50,9 +50,10 @@ const SettingsSheet = () => {
                 <SelectValue placeholder="モデルを選択" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
-                <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                <SelectItem value="gpt-4o-mini">GPT-4o Mini</SelectItem>
+                <SelectItem value="chatgpt">ChatGPT</SelectItem>
+                <SelectItem value="gemini">Gemini</SelectItem>
+                <SelectItem value="claude">Claude</SelectItem>
+                <SelectItem value="mistral">Mistral</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">

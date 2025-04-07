@@ -1,6 +1,4 @@
 
-import { useSettings } from "@/contexts/SettingsContext";
-
 interface EmailGenerationRequest {
   date: string;
   signatures: string;
@@ -51,28 +49,120 @@ export const generateEmailReply = async (
 [ここに本文]
 `;
 
-    // Call to OpenAI's API (or similar)
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${import.meta.env.VITE_OPENAI_API_KEY || ''}`,
-      },
-      body: JSON.stringify({
-        model: formData.model || "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "system",
-            content: formData.systemPrompt || "You are a professional business email writer who specializes in Japanese business correspondence."
-          },
-          {
-            role: "user",
-            content: prompt
+    // Map the selected model to OpenAI model or handle other APIs based on selection
+    let apiEndpoint = "https://api.openai.com/v1/chat/completions";
+    let requestBody: any = {};
+    let headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    // Configure request based on selected model
+    switch (formData.model) {
+      case "chatgpt":
+        headers.Authorization = `Bearer ${import.meta.env.VITE_OPENAI_API_KEY || ''}`;
+        requestBody = {
+          model: "gpt-3.5-turbo",
+          messages: [
+            {
+              role: "system",
+              content: formData.systemPrompt || "You are a professional business email writer who specializes in Japanese business correspondence."
+            },
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 1000,
+        };
+        break;
+      
+      case "gemini":
+        apiEndpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
+        headers.Authorization = `Bearer ${import.meta.env.VITE_GEMINI_API_KEY || ''}`;
+        requestBody = {
+          contents: [
+            {
+              role: "user",
+              parts: [
+                {
+                  text: `${formData.systemPrompt || "あなたは日本語のビジネスメール作成の専門家です。"}\n\n${prompt}`
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 1000,
           }
-        ],
-        temperature: 0.7,
-        max_tokens: 1000,
-      }),
+        };
+        break;
+      
+      case "claude":
+        apiEndpoint = "https://api.anthropic.com/v1/messages";
+        headers.Authorization = `Bearer ${import.meta.env.VITE_CLAUDE_API_KEY || ''}`;
+        headers["anthropic-version"] = "2023-06-01";
+        requestBody = {
+          model: "claude-3-sonnet-20240229",
+          system: formData.systemPrompt || "You are a professional business email writer who specializes in Japanese business correspondence.",
+          messages: [
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          max_tokens: 1000,
+          temperature: 0.7
+        };
+        break;
+      
+      case "mistral":
+        apiEndpoint = "https://api.mistral.ai/v1/chat/completions";
+        headers.Authorization = `Bearer ${import.meta.env.VITE_MISTRAL_API_KEY || ''}`;
+        requestBody = {
+          model: "mistral-medium",
+          messages: [
+            {
+              role: "system",
+              content: formData.systemPrompt || "You are a professional business email writer who specializes in Japanese business correspondence."
+            },
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 1000
+        };
+        break;
+        
+      default:
+        // Fallback to OpenAI
+        headers.Authorization = `Bearer ${import.meta.env.VITE_OPENAI_API_KEY || ''}`;
+        requestBody = {
+          model: "gpt-3.5-turbo",
+          messages: [
+            {
+              role: "system",
+              content: formData.systemPrompt || "You are a professional business email writer who specializes in Japanese business correspondence."
+            },
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 1000,
+        };
+    }
+
+    console.log(`Sending request to ${apiEndpoint}`, { headers, body: requestBody });
+
+    // Call to the selected AI API
+    const response = await fetch(apiEndpoint, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
@@ -84,7 +174,23 @@ export const generateEmailReply = async (
     const data = await response.json();
     console.log("AI API response:", data);
     
-    const aiResponse = data.choices[0].message.content;
+    // Extract content based on the API response format
+    let aiResponse = "";
+    
+    switch (formData.model) {
+      case "gemini":
+        aiResponse = data.candidates[0].content.parts[0].text;
+        break;
+      case "claude":
+        aiResponse = data.content[0].text;
+        break;
+      case "mistral":
+        aiResponse = data.choices[0].message.content;
+        break;
+      case "chatgpt":
+      default:
+        aiResponse = data.choices[0].message.content;
+    }
     
     // Parse the API response to extract subject and content
     let subject = "";
