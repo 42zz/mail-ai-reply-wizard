@@ -96,7 +96,7 @@ export const generateEmailReply = async (
     // メイン処理ロジック - OpenAI APIを使用
     headers.Authorization = `Bearer ${apiKey}`;
     requestBody = {
-      model: "gpt-4o",
+      model: formData.model || "gpt-4o",
       messages: [
         {
           role: "system",

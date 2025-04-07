@@ -1,4 +1,3 @@
-
 import { useSettings } from "@/contexts/SettingsContext";
 import { generateEmailReply } from "@/lib/emailGeneration";
 
@@ -22,7 +21,7 @@ export function useEmailGeneration() {
         recipient_name: "様", // デフォルト値を設定
         received_message: formData.receivedMessage,
         response_outline: formData.responseOutline,
-        model: "gpt4o", // Force GPT-4o
+        model, // 選択されたモデルを使用
         systemPrompt,
       }, apiKeys.openai);
 

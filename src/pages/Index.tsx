@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import EmailReplyForm, { EmailFormData } from "@/components/EmailReplyForm";
 import EmailReplyResult from "@/components/EmailReplyResult";
@@ -75,6 +74,13 @@ const Index = () => {
     setCurrentFormData(undefined);
     setGeneratedSubject(undefined);
     setGeneratedContent("");
+    // EmailReplyFormコンポーネントのリセット機能を呼び出す
+    const formElement = document.querySelector('form') as HTMLFormElement;
+    if (formElement) {
+      // フォームのリセットイベントを発火
+      const resetEvent = new Event('reset', { bubbles: true });
+      formElement.dispatchEvent(resetEvent);
+    }
   };
 
   // Function to open settings sheet

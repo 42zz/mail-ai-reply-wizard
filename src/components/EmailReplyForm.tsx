@@ -52,6 +52,27 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
   }, [initialData]);
 
   useEffect(() => {
+    const handleReset = () => {
+      setDate(new Date());
+      setSenderName("");
+      setSignature("");
+      setReceivedMessage("");
+      setResponseOutline("");
+      setErrors([]);
+      setShowErrors(false);
+      setActiveTab("sender");
+    };
+
+    const formElement = document.querySelector('form');
+    if (formElement) {
+      formElement.addEventListener('reset', handleReset);
+      return () => {
+        formElement.removeEventListener('reset', handleReset);
+      };
+    }
+  }, []);
+
+  useEffect(() => {
     if (senderName) {
       localStorage.setItem('senderName', senderName);
     }

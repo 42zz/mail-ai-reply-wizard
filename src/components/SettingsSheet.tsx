@@ -1,4 +1,3 @@
-
 import { Cog, KeyRound, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -60,7 +59,8 @@ const SettingsSheet = () => {
                 <SelectValue placeholder="モデルを選択" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="gpt4o">GPT-4o</SelectItem>
+                <SelectItem value="gpt-4o">GPT-4o</SelectItem>
+                <SelectItem value="gpt-4o-mini">GPT-4o-mini</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
