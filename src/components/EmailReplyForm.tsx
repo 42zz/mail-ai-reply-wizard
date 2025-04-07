@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import DateSection from "./DateSection";
@@ -34,6 +33,23 @@ const EmailReplyForm = ({ onSubmit, isLoading }: EmailReplyFormProps) => {
   const [receivedMessage, setReceivedMessage] = useState("");
   const [responseOutline, setResponseOutline] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
+
+  useEffect(() => {
+    const savedSenderName = localStorage.getItem('senderName');
+    const savedSignature = localStorage.getItem('signature');
+
+    if (savedSenderName) setSenderName(savedSenderName);
+    if (savedSignature) setSignature(savedSignature);
+  }, []);
+
+  useEffect(() => {
+    if (senderName) {
+      localStorage.setItem('senderName', senderName);
+    }
+    if (signature) {
+      localStorage.setItem('signature', signature);
+    }
+  }, [senderName, signature]);
 
   const validateForm = (): boolean => {
     const newErrors: string[] = [];
