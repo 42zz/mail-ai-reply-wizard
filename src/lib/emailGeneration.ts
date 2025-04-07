@@ -1,9 +1,8 @@
-
 interface EmailGenerationRequest {
   date: string | Date;
   signatures: string;
   sender_name: string;
-  recipient_name: string;
+  recipient_name?: string;
   received_message: string;
   response_outline: string;
   model?: string;
@@ -41,13 +40,12 @@ export const generateEmailReply = async (
     // Format input data as XML
     const promptTemplate = formData.systemPrompt || `あなはプロフェッショナルなメール返信支援AIです。`;
     
-    // Create XML formatted input
+    // Create XML formatted input - updated to match the new system prompt format
     const xmlInput = `
 <input>
-  <date>${date}</date>
+  <current_date>${date}</current_date>
   <signatures>${formData.signatures}</signatures>
   <sender_name>${formData.sender_name}</sender_name>
-  <recipient_name>${formData.recipient_name}</recipient_name>
   <received_message>${formData.received_message}</received_message>
   <response_outline>${formData.response_outline}</response_outline>
 </input>
