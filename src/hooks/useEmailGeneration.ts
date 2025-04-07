@@ -2,11 +2,10 @@
 import { useSettings } from "@/contexts/SettingsContext";
 import { generateEmailReply } from "@/lib/emailGeneration";
 
-// Update the interface to match what's being used in EmailReplyForm.tsx
 export interface EmailFormData {
   date: Date;
   senderName: string;
-  signature: string;
+  signature?: string; // Make signature optional
   receivedMessage: string;
   responseOutline: string;
 }
@@ -17,7 +16,7 @@ export function useEmailGeneration() {
   const generateEmail = async (formData: EmailFormData) => {
     return generateEmailReply({
       date: formData.date instanceof Date ? formData.date.toISOString().split('T')[0] : formData.date,
-      signatures: formData.signature,
+      signatures: formData.signature || "", // Use empty string if signature is undefined
       sender_name: formData.senderName,
       recipient_name: "様", // デフォルト値を設定
       received_message: formData.receivedMessage,

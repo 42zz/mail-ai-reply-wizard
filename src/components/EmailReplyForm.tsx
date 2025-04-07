@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,7 +20,7 @@ interface EmailReplyFormProps {
 export interface EmailFormData {
   date: Date;
   senderName: string;
-  signature: string;
+  signature?: string; // Make signature optional
   receivedMessage: string;
   responseOutline: string;
 }
@@ -63,7 +64,6 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
     const newErrors: string[] = [];
 
     if (!senderName.trim()) newErrors.push("送信者名を入力してください");
-    if (!signature.trim()) newErrors.push("署名を入力してください");
     if (!receivedMessage.trim()) newErrors.push("受信メッセージ内容を入力してください");
     if (!responseOutline.trim()) newErrors.push("返信内容の概要を入力してください");
 
@@ -85,7 +85,7 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
     const formData: EmailFormData = {
       date,
       senderName,
-      signature,
+      signature: signature.trim() ? signature : undefined, // Only include signature if it's not empty
       receivedMessage,
       responseOutline,
     };
