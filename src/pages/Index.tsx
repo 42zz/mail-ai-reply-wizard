@@ -10,33 +10,14 @@ import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const { toast } = useToast();
-  const { model, apiKeys } = useSettings();
+  const { apiKeys } = useSettings();
   const { generateEmail } = useEmailGeneration();
   const [showResult, setShowResult] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [generatedSubject, setGeneratedSubject] = useState<string | undefined>(undefined);
   const [generatedContent, setGeneratedContent] = useState("");
   
-  // Get the appropriate API key based on selected model
-  const getApiKey = () => {
-    switch (model) {
-      case "gpt4o": return apiKeys.openai;  // Uses the OpenAI key
-      case "gemini": return apiKeys.gemini;
-      case "claude-haiku": return apiKeys.claude;  // Uses the Claude key
-      default: return apiKeys.openai;
-    }
-  };
-  
-  const getApiKeyDisplayName = () => {
-    switch (model) {
-      case "gpt4o": return "OpenAI";
-      case "gemini": return "Gemini";
-      case "claude-haiku": return "Claude";
-      default: return "OpenAI";
-    }
-  };
-  
-  const hasApiKey = !!getApiKey() && getApiKey().trim() !== "";
+  const hasApiKey = !!apiKeys.openai && apiKeys.openai.trim() !== "";
 
   const handleFormSubmit = async (formData: EmailFormData) => {
     setIsLoading(true);
@@ -44,7 +25,7 @@ const Index = () => {
       if (!hasApiKey) {
         toast({
           title: "APIキーエラー",
-          description: `${getApiKeyDisplayName()} APIキーが設定されていません。設定画面で追加してください。`,
+          description: "OpenAI APIキーが設定されていません。設定画面で追加してください。",
           variant: "destructive",
         });
         setIsLoading(false);
@@ -62,9 +43,9 @@ const Index = () => {
         let errorMessage = "メール生成中にエラーが発生しました。もう一度お試しください。";
         
         if (response.error === "API_KEY_MISSING") {
-          errorMessage = `${getApiKeyDisplayName()} APIキーが設定されていません。設定画面で追加してください。`;
+          errorMessage = "OpenAI APIキーが設定されていません。設定画面で追加してください。";
         } else if (response.error === "INVALID_API_KEY") {
-          errorMessage = `${getApiKeyDisplayName()} APIキーが無効です。設定画面で正しいAPIキーを設定してください。`;
+          errorMessage = "OpenAI APIキーが無効です。設定画面で正しいAPIキーを設定してください。";
         } else if (response.error === "RATE_LIMIT_EXCEEDED") {
           errorMessage = "APIリクエスト制限に達しました。しばらく時間をおいてから再試行してください。";
         }
@@ -120,7 +101,7 @@ const Index = () => {
           <Alert variant="warning" className="mb-6">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription className="flex items-center justify-between">
-              <span>{getApiKeyDisplayName()} APIキーが設定されていません。右上の設定ボタンからAPIキーを設定してください。</span>
+              <span>OpenAI APIキーが設定されていません。右上の設定ボタンからAPIキーを設定してください。</span>
               <Button 
                 variant="outline" 
                 size="sm" 

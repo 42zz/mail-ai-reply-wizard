@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode } from "react";
 
 interface SettingsContextType {
@@ -8,8 +7,6 @@ interface SettingsContextType {
   setSystemPrompt: (prompt: string) => void;
   apiKeys: {
     openai: string;
-    gemini: string;
-    claude: string;
   };
   setApiKey: (provider: string, key: string) => void;
 }
@@ -52,18 +49,17 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   // Initialize API keys from localStorage or empty strings
   const [apiKeys, setApiKeys] = useState({
     openai: localStorage.getItem("openai_api_key") || "",
-    gemini: localStorage.getItem("gemini_api_key") || "",
-    claude: localStorage.getItem("claude_api_key") || "",
   });
 
   // Function to update an API key
   const setApiKey = (provider: string, key: string) => {
-    setApiKeys((prev) => {
-      const newKeys = { ...prev, [provider]: key };
-      // Save to localStorage for persistence
-      localStorage.setItem(`${provider}_api_key`, key);
-      return newKeys;
-    });
+    if (provider === "openai") {
+      setApiKeys((prev) => {
+        const newKeys = { ...prev, openai: key };
+        localStorage.setItem("openai_api_key", key);
+        return newKeys;
+      });
+    }
   };
 
   return (
