@@ -2,7 +2,6 @@ import { useState } from "react";
 import EmailReplyForm, { EmailFormData } from "@/components/EmailReplyForm";
 import EmailReplyResult from "@/components/EmailReplyResult";
 import { useEmailGeneration } from "@/hooks/useEmailGeneration";
-import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Sparkles, AlertTriangle, Settings } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -57,16 +56,6 @@ const Index = () => {
         setIsLoading(false);
         return;
       }
-
-      const requestData = {
-        date: format(formData.date, "yyyy-MM-dd"),
-        signatures: formData.signature,
-        sender_name: formData.senderName,
-        recipient_name: "様", // 受信者名の代わりに敬称のみ使用
-        received_message: formData.receivedMessage,
-        response_outline: formData.responseOutline,
-        model,
-      };
 
       const response = await generateEmail(formData);
 

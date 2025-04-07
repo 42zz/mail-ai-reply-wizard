@@ -1,6 +1,6 @@
 
 interface EmailGenerationRequest {
-  date: string;
+  date: string | Date;
   signatures: string;
   sender_name: string;
   recipient_name: string;
@@ -31,15 +31,20 @@ export const generateEmailReply = async (
       };
     }
 
-    console.log("Sending request to AI API with data:", formData);
+    // Ensure date is in string format
+    const date = formData.date instanceof Date 
+      ? formData.date.toISOString().split('T')[0]
+      : formData.date;
+
+    console.log("Sending request to AI API with data:", {...formData, date});
     
     // Format input data as XML
-    const promptTemplate = formData.systemPrompt || `あなたはプロフェッショナルなメール返信支援AIです。`;
+    const promptTemplate = formData.systemPrompt || `あなはプロフェッショナルなメール返信支援AIです。`;
     
     // Create XML formatted input
     const xmlInput = `
 <input>
-  <date>${formData.date}</date>
+  <date>${date}</date>
   <signatures>${formData.signatures}</signatures>
   <sender_name>${formData.sender_name}</sender_name>
   <recipient_name>${formData.recipient_name}</recipient_name>
