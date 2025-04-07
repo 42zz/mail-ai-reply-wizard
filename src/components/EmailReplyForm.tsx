@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -109,9 +108,15 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
         break;
     }
 
+    const clearMessages = {
+      "sender": "送信者情報をクリアしました",
+      "message": "受信メッセージをクリアしました",
+      "response": "返信概要をクリアしました"
+    };
+
     toast({
       title: "クリアしました",
-      description: "入力内容を削除しました",
+      description: clearMessages[field],
     });
   };
 
@@ -158,7 +163,7 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
                   className="text-red-500 hover:text-red-700"
                 >
                   <Trash2 className="h-4 w-4 mr-1" />
-                  クリア
+                  送信者情報をクリア
                 </Button>
               </div>
               <DateSection date={date} setDate={setDate} />
@@ -181,7 +186,7 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
                   className="text-red-500 hover:text-red-700"
                 >
                   <Trash2 className="h-4 w-4 mr-1" />
-                  クリア
+                  受信メッセージをクリア
                 </Button>
               </div>
               <MessageSection
@@ -201,7 +206,7 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
                   className="text-red-500 hover:text-red-700"
                 >
                   <Trash2 className="h-4 w-4 mr-1" />
-                  クリア
+                  返信概要をクリア
                 </Button>
               </div>
               <ResponseOutlineSection
