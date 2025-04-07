@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import DateSection from "./DateSection";
 import SenderSection from "./SenderSection";
-import RecipientSection from "./RecipientSection";
 import MessageSection from "./MessageSection";
 import ResponseOutlineSection from "./ResponseOutlineSection";
 import { useToast } from "@/hooks/use-toast";
@@ -21,7 +20,6 @@ export interface EmailFormData {
   date: Date;
   senderName: string;
   signature: string;
-  recipientName: string;
   receivedMessage: string;
   responseOutline: string;
 }
@@ -31,7 +29,6 @@ const EmailReplyForm = ({ onSubmit, isLoading }: EmailReplyFormProps) => {
   const [date, setDate] = useState<Date>(new Date());
   const [senderName, setSenderName] = useState("");
   const [signature, setSignature] = useState("");
-  const [recipientName, setRecipientName] = useState("");
   const [receivedMessage, setReceivedMessage] = useState("");
   const [responseOutline, setResponseOutline] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
@@ -59,7 +56,6 @@ const EmailReplyForm = ({ onSubmit, isLoading }: EmailReplyFormProps) => {
 
     if (!senderName.trim()) newErrors.push("送信者名を入力してください");
     if (!signature.trim()) newErrors.push("署名を入力してください");
-    if (!recipientName.trim()) newErrors.push("受信者名を入力してください");
     if (!receivedMessage.trim()) newErrors.push("受信メッセージ内容を入力してください");
     if (!responseOutline.trim()) newErrors.push("返信内容の概要を入力してください");
 
@@ -82,7 +78,6 @@ const EmailReplyForm = ({ onSubmit, isLoading }: EmailReplyFormProps) => {
       date,
       senderName,
       signature,
-      recipientName,
       receivedMessage,
       responseOutline,
     };
@@ -112,7 +107,7 @@ const EmailReplyForm = ({ onSubmit, isLoading }: EmailReplyFormProps) => {
                 <User className="h-4 w-4" />
                 <span className="hidden sm:inline">送信者情報</span>
               </TabsTrigger>
-              <TabsTrigger value="recipient-message" className="flex items-center gap-2">
+              <TabsTrigger value="message" className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
                 <span className="hidden sm:inline">受信情報</span>
               </TabsTrigger>
@@ -132,11 +127,7 @@ const EmailReplyForm = ({ onSubmit, isLoading }: EmailReplyFormProps) => {
               />
             </TabsContent>
 
-            <TabsContent value="recipient-message" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
-              <RecipientSection
-                recipientName={recipientName}
-                setRecipientName={setRecipientName}
-              />
+            <TabsContent value="message" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
               <MessageSection
                 receivedMessage={receivedMessage}
                 setReceivedMessage={setReceivedMessage}
@@ -157,7 +148,7 @@ const EmailReplyForm = ({ onSubmit, isLoading }: EmailReplyFormProps) => {
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  const tabs = ["sender", "recipient-message", "response"];
+                  const tabs = ["sender", "message", "response"];
                   const currentIndex = tabs.indexOf(activeTab);
                   if (currentIndex > 0) {
                     setActiveTab(tabs[currentIndex - 1]);
@@ -173,7 +164,7 @@ const EmailReplyForm = ({ onSubmit, isLoading }: EmailReplyFormProps) => {
                 type="button"
                 className="ml-auto"
                 onClick={() => {
-                  const tabs = ["sender", "recipient-message", "response"];
+                  const tabs = ["sender", "message", "response"];
                   const currentIndex = tabs.indexOf(activeTab);
                   if (currentIndex < tabs.length - 1) {
                     setActiveTab(tabs[currentIndex + 1]);

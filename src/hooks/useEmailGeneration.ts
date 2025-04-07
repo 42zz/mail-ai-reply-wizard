@@ -6,7 +6,6 @@ interface EmailFormData {
   date: string;
   signatures: string;
   sender_name: string;
-  recipient_name: string;
   received_message: string;
   response_outline: string;
 }
@@ -28,6 +27,7 @@ export function useEmailGeneration() {
   const generateEmail = async (formData: EmailFormData) => {
     return generateEmailReply({
       ...formData,
+      recipient_name: "様", // デフォルト値を設定
       model,
       systemPrompt,
     }, getApiKey());

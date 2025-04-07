@@ -58,7 +58,7 @@ const Index = () => {
         date: format(formData.date, "yyyy-MM-dd"),
         signatures: formData.signature,
         sender_name: formData.senderName,
-        recipient_name: formData.recipientName,
+        recipient_name: "様", // 受信者名の代わりに敬称のみ使用
         received_message: formData.receivedMessage,
         response_outline: formData.responseOutline,
         model,
