@@ -73,33 +73,13 @@ export const generateEmailReply = async (
             },
             {
               role: "user",
-              content: xmlInput
+              // Add explicit mention of JSON output format for GPT-4o
+              content: `${xmlInput}\n\n返信内容は以下のJSON形式で提供してください：\n{\n  "subject": "件名",\n  "content": "本文"\n}`
             }
           ],
           temperature: 0.7,
           max_tokens: 1000,
           response_format: { type: "json_object" }
-        };
-        break;
-      
-      case "gemini":
-        apiEndpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
-        headers.Authorization = `Bearer ${apiKey}`;
-        requestBody = {
-          contents: [
-            {
-              role: "user",
-              parts: [
-                {
-                  text: `${formData.systemPrompt || "あなたは日本語のビジネスメール作成の専門家です。"}\n\n${xmlInput}`
-                }
-              ]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1000,
-          }
         };
         break;
       
@@ -113,7 +93,7 @@ export const generateEmailReply = async (
           messages: [
             {
               role: "user",
-              content: xmlInput
+              content: `${xmlInput}\n\n返信内容は以下の形式で提供してください：\n<output>\n  <subject>件名（必要な場合のみ）</subject>\n  <content>メール本文</content>\n</output>`
             }
           ],
           max_tokens: 1000,
@@ -122,7 +102,7 @@ export const generateEmailReply = async (
         break;
         
       default:
-        // Fallback to GPT-4o
+        // Fallback to GPT-4o with JSON format
         headers.Authorization = `Bearer ${apiKey}`;
         requestBody = {
           model: "gpt-4o",
@@ -133,7 +113,8 @@ export const generateEmailReply = async (
             },
             {
               role: "user",
-              content: xmlInput
+              // Add explicit mention of JSON output format for GPT-4o
+              content: `${xmlInput}\n\n返信内容は以下のJSON形式で提供してください：\n{\n  "subject": "件名",\n  "content": "本文"\n}`
             }
           ],
           temperature: 0.7,
@@ -178,6 +159,8 @@ export const generateEmailReply = async (
     
     // Extract content based on the API response format
     let aiResponse = "";
+    let subject = "";
+    let content = "";
     
     switch (formData.model) {
       case "gpt4o":
@@ -197,21 +180,28 @@ export const generateEmailReply = async (
           aiResponse = data.choices[0].message.content;
         }
         break;
-      case "gemini":
-        aiResponse = data.candidates[0].content.parts[0].text;
-        break;
       case "claude-haiku":
         aiResponse = data.content[0].text;
         break;
       default:
-        aiResponse = data.choices[0].message.content;
+        // For default (GPT-4o), also use JSON format
+        try {
+          const jsonResponse = typeof data.choices[0].message.content === 'string' 
+            ? JSON.parse(data.choices[0].message.content) 
+            : data.choices[0].message.content;
+            
+          return {
+            subject: jsonResponse.subject || "",
+            content: jsonResponse.content || "",
+            success: true
+          };
+        } catch (error) {
+          console.error("Error parsing JSON response:", error);
+          aiResponse = data.choices[0].message.content;
+        }
     }
     
-    // Parse XML output format if available
-    let subject = "";
-    let content = "";
-    
-    // Try to parse XML output format
+    // Parse XML output format if available (mainly for Claude)
     if (aiResponse.includes("<output>") && aiResponse.includes("</output>")) {
       // Extract subject if available
       if (aiResponse.includes("<subject>") && aiResponse.includes("</subject>")) {
