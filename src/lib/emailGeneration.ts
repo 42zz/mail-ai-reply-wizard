@@ -1,4 +1,6 @@
 
+import { useSettings } from "@/contexts/SettingsContext";
+
 interface EmailGenerationRequest {
   date: string;
   signatures: string;
@@ -6,6 +8,8 @@ interface EmailGenerationRequest {
   recipient_name: string;
   received_message: string;
   response_outline: string;
+  model?: string;
+  systemPrompt?: string;
 }
 
 interface EmailGenerationResponse {
@@ -55,11 +59,11 @@ export const generateEmailReply = async (
         Authorization: `Bearer ${import.meta.env.VITE_OPENAI_API_KEY || ''}`,
       },
       body: JSON.stringify({
-        model: "gpt-3.5-turbo",
+        model: formData.model || "gpt-3.5-turbo",
         messages: [
           {
             role: "system",
-            content: "You are a professional business email writer who specializes in Japanese business correspondence."
+            content: formData.systemPrompt || "You are a professional business email writer who specializes in Japanese business correspondence."
           },
           {
             role: "user",
