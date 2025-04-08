@@ -93,19 +93,21 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-12">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-6">
       <div className="container px-4 sm:px-6 lg:px-8 max-w-7xl">
-        <div className="text-center mb-8 animate-fade-in">
-          <div className="inline-flex items-center justify-center p-3 bg-blue-100 rounded-full mb-4 shadow-inner">
-            <Mail className="h-8 w-8 text-blue-600" />
+        <div className="flex items-center mb-8 animate-fade-in">
+          <div className="inline-flex items-center justify-center p-2 bg-blue-100 rounded-full mr-3 shadow-inner">
+            <Mail className="h-6 w-6 text-blue-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-3 flex items-center justify-center gap-2">
-            メール返信AI作成ツール
-            <Sparkles className="h-5 w-5 text-yellow-500" />
-          </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            必要な情報を入力するだけで、AIが適切なビジネスメールの返信文を生成します。
-          </p>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              メール返信AI作成ツール
+              <Sparkles className="h-4 w-4 text-yellow-500" />
+            </h1>
+            <p className="text-sm text-gray-600">
+              必要な情報を入力するだけで、AIが適切なビジネスメールの返信文を生成します。
+            </p>
+          </div>
         </div>
         
         {!hasApiKey && (
