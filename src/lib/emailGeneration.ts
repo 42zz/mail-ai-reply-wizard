@@ -62,7 +62,7 @@ export const generateEmailReply = async (
     // メイン処理ロジック - OpenAI APIを使用
     headers.Authorization = `Bearer ${apiKey}`;
     requestBody = {
-      model: formData.model || "gpt-4o",
+      model: formData.model || "gpt-4.1",
       messages: [
         {
           role: "system",
@@ -140,7 +140,7 @@ export const generateEmailReply = async (
           success: true
         };
       } catch (error) {
-        console.error("Error parsing GPT-4o JSON response:", error);
+        console.error("Error parsing GPT JSON response:", error);
         // JSONが解析できない場合は、生のレスポンスを返す
         return {
           content: data.choices[0].message.content || "返信文の生成に失敗しました。",

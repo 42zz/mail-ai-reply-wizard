@@ -30,7 +30,7 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [model, setModel] = useState(() => {
     // ローカルストレージからモデルを読み込む
-    return localStorage.getItem("selected_model") || "gpt-4o";
+    return localStorage.getItem("selected_model") || "gpt-4.1";
   });
   
   // モデルが変更されたときにローカルストレージに保存

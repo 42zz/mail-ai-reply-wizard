@@ -24,7 +24,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
 const SettingsSheet = () => {
-  const { model, setModel, systemPrompt, setSystemPrompt, apiKeys, setApiKey } = useSettings();
+  const { model, setModel, systemPrompt, setSystemPrompt, apiKeys, setApiKey } =
+    useSettings();
   const [showApiKeys, setShowApiKeys] = useState(false);
   const { toast } = useToast();
 
@@ -99,8 +100,10 @@ const SettingsSheet = () => {
                 <SelectValue placeholder="モデルを選択" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="gpt-4.1">GPT-4o</SelectItem>
-                <SelectItem value="gpt-4.1-mini">GPT-4o-mini</SelectItem>
+                <SelectItem value="gpt-4.1">GPT-4.1</SelectItem>
+                <SelectItem value="gpt-4.1-mini">GPT-4.1-mini</SelectItem>
+                <SelectItem value="gpt-4o">GPT-4o</SelectItem>
+                <SelectItem value="gpt-4o-mini">GPT-4o-mini</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
@@ -121,7 +124,7 @@ const SettingsSheet = () => {
                   APIキーを取得 <ExternalLink className="h-3 w-3 ml-1" />
                 </a>
                 <Button
-                  variant="outline" 
+                  variant="outline"
                   size="sm"
                   onClick={() => setShowApiKeys(!showApiKeys)}
                 >
@@ -137,7 +140,9 @@ const SettingsSheet = () => {
             {showApiKeys && (
               <div className="space-y-3 pt-2">
                 <div>
-                  <Label htmlFor="openai-key" className="text-xs mb-1 block">OpenAI APIキー</Label>
+                  <Label htmlFor="openai-key" className="text-xs mb-1 block">
+                    OpenAI APIキー
+                  </Label>
                   <Input
                     id="openai-key"
                     value={apiKeys.openai}
