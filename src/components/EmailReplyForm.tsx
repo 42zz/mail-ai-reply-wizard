@@ -39,7 +39,7 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
     if (initialData) {
       setDate(initialData.date);
       setSenderName(initialData.senderName);
-      setSignature(initialData.signature);
+      setSignature(initialData.signature || "");
       setReceivedMessage(initialData.receivedMessage);
       setResponseOutline(initialData.responseOutline);
     } else {
@@ -76,7 +76,7 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
     if (senderName) {
       localStorage.setItem('senderName', senderName);
     }
-    if (signature) {
+    if (signature !== undefined) {
       localStorage.setItem('signature', signature);
     }
   }, [senderName, signature]);

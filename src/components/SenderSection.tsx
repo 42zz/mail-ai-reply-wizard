@@ -141,8 +141,8 @@ const SenderSection = ({
     }
   };
 
-  const selectTemplate = (content: string) => {
-    setSignature(content);
+  const selectTemplate = (content: string | null) => {
+    setSignature(content || "");
     toast({
       title: "適用完了",
       description: "署名テンプレートを適用しました",
@@ -298,7 +298,7 @@ const SenderSection = ({
               <DropdownMenuContent className="w-56">
                 <DropdownMenuLabel>署名テンプレート</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setSignature("")}>
+                <DropdownMenuItem onClick={() => selectTemplate(null)}>
                   未設定
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

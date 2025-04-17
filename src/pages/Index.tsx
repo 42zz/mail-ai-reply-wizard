@@ -101,7 +101,7 @@ const Index = () => {
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              メール返信AI作成ツール
+              リプライマスター
               <Sparkles className="h-4 w-4 text-yellow-500" />
             </h1>
             <p className="text-sm text-gray-600">
