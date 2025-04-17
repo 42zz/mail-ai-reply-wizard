@@ -74,7 +74,7 @@ const SenderSection = ({
       return;
     }
 
-    addSignatureTemplate(templateName, templateContent);
+    addSignatureTemplate(templateName.trim(), templateContent.trim());
     setTemplateName("");
     setTemplateContent("");
     setIsAddingTemplate(false);
@@ -106,7 +106,7 @@ const SenderSection = ({
       return;
     }
 
-    updateSignatureTemplate(selectedTemplateId, templateName, templateContent);
+    updateSignatureTemplate(selectedTemplateId, templateName.trim(), templateContent.trim());
     setTemplateName("");
     setTemplateContent("");
     setSelectedTemplateId(null);
@@ -226,7 +226,10 @@ const SenderSection = ({
                   <DialogClose asChild>
                     <Button variant="outline">キャンセル</Button>
                   </DialogClose>
-                  <Button onClick={handleAddTemplate}>
+                  <Button 
+                    onClick={handleAddTemplate} 
+                    disabled={!templateName.trim() || !templateContent.trim()}
+                  >
                     <Save className="h-4 w-4 mr-1" />
                     保存
                   </Button>
@@ -279,7 +282,10 @@ const SenderSection = ({
                     <DialogClose asChild>
                       <Button variant="outline">キャンセル</Button>
                     </DialogClose>
-                    <Button onClick={handleEditTemplate}>
+                    <Button 
+                      onClick={handleEditTemplate}
+                      disabled={!templateName.trim() || !templateContent.trim()}
+                    >
                       <Save className="h-4 w-4 mr-1" />
                       更新
                     </Button>
