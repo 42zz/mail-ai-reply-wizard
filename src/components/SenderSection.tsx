@@ -298,6 +298,10 @@ const SenderSection = ({
               <DropdownMenuContent className="w-56">
                 <DropdownMenuLabel>署名テンプレート</DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setSignature("")}>
+                  未設定
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 {signatureTemplates.length === 0 ? (
                   <DropdownMenuItem disabled>
                     テンプレートがありません
