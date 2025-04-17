@@ -179,7 +179,7 @@ const SenderSection = ({
       <div className="space-y-2">
         <div className="flex justify-between items-center">
           <label htmlFor="signature" className="block text-sm font-medium">
-            署名
+            署名（任意）
           </label>
           <div className="flex space-x-2">
             <Dialog open={isAddingTemplate} onOpenChange={setIsAddingTemplate}>
@@ -297,6 +297,10 @@ const SenderSection = ({
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56">
                 <DropdownMenuLabel>署名テンプレート</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setSignature("")}>
+                  未設定
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {signatureTemplates.length === 0 ? (
                   <DropdownMenuItem disabled>
