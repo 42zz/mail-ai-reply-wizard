@@ -179,7 +179,7 @@ const SenderSection = ({
       <div className="space-y-2">
         <div className="flex justify-between items-center">
           <label htmlFor="signature" className="block text-sm font-medium">
-            署名
+            署名（任意）
           </label>
           <div className="flex space-x-2">
             <Dialog open={isAddingTemplate} onOpenChange={setIsAddingTemplate}>
