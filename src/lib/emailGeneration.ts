@@ -53,9 +53,9 @@ export const generateEmailReply = async (
 `;
 
     // Map the selected model to OpenAI model or handle other APIs based on selection
-    let apiEndpoint = "https://api.openai.com/v1/chat/completions";
+    const apiEndpoint = "https://api.openai.com/v1/chat/completions";
     let requestBody: any = {};
-    let headers: Record<string, string> = {
+    const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
 
