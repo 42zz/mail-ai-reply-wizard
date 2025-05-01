@@ -1,3 +1,5 @@
+import { HistoryEntry } from "@/types";
+
 interface EmailGenerationRequest {
   date: string | Date;
   signatures: string;
@@ -10,6 +12,29 @@ interface EmailGenerationRequest {
   style_examples?: string[];
 }
 
+// EmailFormData をインポート (HistoryEntry で使用)
+import { EmailFormData } from "@/components/EmailReplyForm";
+
+// OpenAI APIリクエストボディの型
+interface OpenAIChatCompletionRequest {
+  model: string;
+  messages: {
+    role: string;
+    content: string;
+  }[];
+  temperature: number;
+  max_tokens: number;
+  response_format: { type: string };
+}
+
+// HistoryEntryのrequestの型を修正
+interface CorrectedHistoryEntry {
+  id: string;
+  request: Omit<EmailGenerationRequest, 'date'> & { date: string | Date }; // date を string | Date に
+  response: EmailGenerationResponse;
+  timestamp: number;
+}
+
 interface EmailGenerationResponse {
   subject?: string;
   content: string;
@@ -17,22 +42,52 @@ interface EmailGenerationResponse {
   error?: string;
 }
 
+const MAX_HISTORY_ITEMS = 5;
+
+const saveHistory = (request: EmailGenerationRequest, response: EmailGenerationResponse) => {
+  try {
+    const historyString = localStorage.getItem("emailHistory");
+    const history: CorrectedHistoryEntry[] = historyString ? JSON.parse(historyString) : [];
+
+    const newEntry: CorrectedHistoryEntry = {
+      id: crypto.randomUUID(),
+      request: {
+        ...request,
+        date: request.date
+      },
+      response,
+      timestamp: Date.now(),
+    };
+
+    history.unshift(newEntry);
+
+    const trimmedHistory = history.slice(0, MAX_HISTORY_ITEMS);
+
+    localStorage.setItem("emailHistory", JSON.stringify(trimmedHistory));
+  } catch (error) {
+    console.error("Failed to save email generation history:", error);
+  }
+};
+
 export const generateEmailReply = async (
   formData: EmailGenerationRequest,
   apiKey: string
 ): Promise<EmailGenerationResponse> => {
+  let result: EmailGenerationResponse;
   try {
     // APIキーが空の場合はエラーを返す
     if (!apiKey || apiKey.trim() === "") {
-      return {
+      result = {
         content: "APIキーが設定されていません。設定画面から適切なAPIキーを設定してください。",
         success: false,
         error: "API_KEY_MISSING"
       };
+      saveHistory(formData, result); // 失敗履歴も保存
+      return result;
     }
 
     // Ensure date is in string format
-    const date = formData.date instanceof Date 
+    const date = formData.date instanceof Date
       ? formData.date.toISOString().split('T')[0]
       : formData.date;
 
@@ -53,15 +108,12 @@ export const generateEmailReply = async (
 `;
 
     // Map the selected model to OpenAI model or handle other APIs based on selection
-    let apiEndpoint = "https://api.openai.com/v1/chat/completions";
-    let requestBody: any = {};
-    let headers: Record<string, string> = {
+    const apiEndpoint = "https://api.openai.com/v1/chat/completions";
+    const headers: Record<string, string> = {
       "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`
     };
-
-    // メイン処理ロジック - OpenAI APIを使用
-    headers.Authorization = `Bearer ${apiKey}`;
-    requestBody = {
+    const requestBody: OpenAIChatCompletionRequest = {
       model: formData.model || "gpt-4.1",
       messages: [
         {
@@ -100,20 +152,23 @@ export const generateEmailReply = async (
         
         // APIエラーの種類に基づいたメッセージを返す
         if (response.status === 401) {
-          return {
+          result = {
             content: "APIキーの認証に失敗しました。設定画面から正しいAPIキーを設定してください。",
             success: false,
             error: "INVALID_API_KEY"
           };
         } else if (response.status === 429) {
-          return {
+          result = {
             content: "APIリクエスト制限に達しました。しばらく時間をおいてから再試行してください。",
             success: false,
             error: "RATE_LIMIT_EXCEEDED"
           };
+        } else {
+           result = { content: `APIエラーが発生しました (${response.status})`, success: false, error: `API_ERROR_${response.status}` };
         }
-        
-        throw new Error(`API error: ${response.status}`);
+
+        saveHistory(formData, result); // 失敗履歴も保存
+        return result;
       }
 
       const data = await response.json();
@@ -127,44 +182,59 @@ export const generateEmailReply = async (
           
         // 内容がない場合はエラーとして処理
         if (!jsonResponse.content || jsonResponse.content.trim() === "") {
-          return {
+          result = {
             content: "AIが空の返信を生成しました。もう一度お試しください。",
             success: false,
             error: "EMPTY_RESPONSE"
           };
+        } else {
+            result = {
+                subject: jsonResponse.subject || "",
+                content: jsonResponse.content || "",
+                success: true
+            };
         }
-          
-        return {
-          subject: jsonResponse.subject || "",
-          content: jsonResponse.content || "",
-          success: true
-        };
+        saveHistory(formData, result); // 成功履歴も保存
+        return result;
       } catch (error) {
         console.error("Error parsing GPT JSON response:", error);
         // JSONが解析できない場合は、生のレスポンスを返す
-        return {
+        result = {
           content: data.choices[0].message.content || "返信文の生成に失敗しました。",
-          success: true
+          success: true // Parsing error, but generation might have been successful textually
         };
+        saveHistory(formData, result);
+        return result;
       }
     } catch (error) {
       clearTimeout(timeoutId);
       if (error.name === 'AbortError') {
-        return {
+        result = {
           content: "リクエストがタイムアウトしました。ネットワーク接続を確認して、もう一度お試しください。",
           success: false,
           error: "TIMEOUT"
         };
+      } else {
+         console.error("Inner email generation error:", error);
+         result = {
+            content: "メール生成中に内部エラーが発生しました。",
+            success: false,
+            error: "INTERNAL_ERROR"
+         };
       }
-      throw error; // 他のエラーは外側のcatchブロックで処理
+      saveHistory(formData, result);
+      return result;
     }
   } catch (error) {
     console.error("Email generation error:", error);
-    return {
-      content: "メール生成中にエラーが発生しました。ネットワーク接続を確認して、もう一度お試しください。",
+    result = {
+      content: "メール生成中に予期せぬエラーが発生しました。ネットワーク接続を確認して、もう一度お試しください。",
       success: false,
       error: "GENERATION_ERROR"
     };
+    // Consider if saving history here makes sense - request data might be unavailable
+    // saveHistory(formData, result); // formData may not be defined here
+    return result;
   }
 };
 
