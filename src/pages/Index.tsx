@@ -7,6 +7,7 @@ import { Mail, Sparkles, AlertTriangle, Settings } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSettings } from "@/contexts/SettingsContext";
 import { Button } from "@/components/ui/button";
+import { HistoryEntry } from "@/types";
 
 const Index = () => {
   const { toast } = useToast();
@@ -32,7 +33,6 @@ const Index = () => {
         return;
       }
 
-      // Save the current form data for potential editing later
       setCurrentFormData(formData);
 
       const response = await generateEmail(formData);
@@ -41,17 +41,17 @@ const Index = () => {
         setGeneratedSubject(response.subject);
         setGeneratedContent(response.content);
       } else {
-        // エラーの種類に基づいたメッセージを表示
         let errorMessage = "メール生成中にエラーが発生しました。もう一度お試しください。";
-        
         if (response.error === "API_KEY_MISSING") {
           errorMessage = "OpenAI APIキーが設定されていません。設定画面で追加してください。";
         } else if (response.error === "INVALID_API_KEY") {
           errorMessage = "OpenAI APIキーが無効です。設定画面で正しいAPIキーを設定してください。";
         } else if (response.error === "RATE_LIMIT_EXCEEDED") {
           errorMessage = "APIリクエスト制限に達しました。しばらく時間をおいてから再試行してください。";
+        } else if (response.error === "EMPTY_RESPONSE") {
+          errorMessage = "AIが空の返信を生成しました。入力内容を確認して再度お試しください。";
         }
-        
+
         toast({
           title: "エラー",
           description: errorMessage,
@@ -62,7 +62,7 @@ const Index = () => {
       console.error("Error generating email:", error);
       toast({
         title: "エラー",
-        description: "メール生成中にエラーが発生しました。もう一度お試しください。",
+        description: "メール生成中に予期せぬエラーが発生しました。ネットワーク接続などを確認してください。",
         variant: "destructive",
       });
     } finally {
@@ -74,18 +74,23 @@ const Index = () => {
     setCurrentFormData(undefined);
     setGeneratedSubject(undefined);
     setGeneratedContent("");
-    // EmailReplyFormコンポーネントのリセット機能を呼び出す
     const formElement = document.querySelector('form') as HTMLFormElement;
     if (formElement) {
-      // フォームのリセットイベントを発火
       const resetEvent = new Event('reset', { bubbles: true });
       formElement.dispatchEvent(resetEvent);
     }
   };
 
-  // Function to open settings sheet
+  const handleHistorySelect = (entry: HistoryEntry) => {
+    setGeneratedSubject(entry.response.subject);
+    setGeneratedContent(entry.response.content);
+    toast({
+      title: "履歴適用完了",
+      description: "選択された履歴の内容を表示しました。",
+    });
+  };
+
   const openSettings = () => {
-    // Find the settings button by aria-label and click it
     const settingsButton = document.querySelector('[aria-label="設定"]') as HTMLButtonElement;
     if (settingsButton) {
       settingsButton.click();
@@ -144,7 +149,8 @@ const Index = () => {
               subject={generatedSubject}
               content={generatedContent}
               onReset={handleReset}
-              onEdit={() => {/* Editing happens in the left panel */}}
+              onEdit={() => {/* 実装なし */}}
+              onHistorySelect={handleHistorySelect}
             />
           </div>
         </div>
