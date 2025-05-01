@@ -10,8 +10,7 @@ export interface EmailFormData {
 }
 
 export function useEmailGeneration() {
-  const { model, systemPrompt, apiKeys } = useSettings();
-
+  const { model, systemPrompt, apiKeys, styleExamples } = useSettings();
   const generateEmail = async (formData: EmailFormData) => {
     try {
       const response = await generateEmailReply({
@@ -23,6 +22,7 @@ export function useEmailGeneration() {
         response_outline: formData.responseOutline,
         model, // 選択されたモデルを使用
         systemPrompt,
+        style_examples: styleExamples,
       }, apiKeys.openai);
 
       // Add additional validation to ensure content exists
