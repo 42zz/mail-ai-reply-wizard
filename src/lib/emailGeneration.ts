@@ -36,8 +36,6 @@ export const generateEmailReply = async (
       ? formData.date.toISOString().split('T')[0]
       : formData.date;
 
-    console.log("Sending request to AI API with data:", {...formData, date});
-    
     // Create XML formatted input - updated to match the new system prompt format
     const xmlInput = `
 <input>
@@ -46,9 +44,6 @@ export const generateEmailReply = async (
   <sender_name>${formData.sender_name}</sender_name>
   <received_message>${formData.received_message}</received_message>
   <response_outline>${formData.response_outline}</response_outline>
-  <style_examples>
-    ${formData.style_examples?.map(example => `<example>${example}</example>`).join('\n') || ''}
-  </style_examples>
 </input>
 `;
 
@@ -59,6 +54,18 @@ export const generateEmailReply = async (
       "Content-Type": "application/json",
     };
 
+    // Construct system prompt including style examples if they exist
+    let systemPromptContent = formData.systemPrompt || "You are a professional business email writer who specializes in Japanese business correspondence.";
+    if (formData.style_examples && formData.style_examples.length > 0) {
+      systemPromptContent += "\n\nFollow these style examples:\n";
+      formData.style_examples.forEach((example, index) => {
+        // Assuming example is a string like "Input: [input text] Output: [output text]"
+        // If the format is different, adjust parsing accordingly.
+        // For now, treating the whole string as one example block.
+        systemPromptContent += `Example ${index + 1}:\n${example}\n`;
+      });
+    }
+
     // メイン処理ロジック - OpenAI APIを使用
     headers.Authorization = `Bearer ${apiKey}`;
     requestBody = {
@@ -66,7 +73,7 @@ export const generateEmailReply = async (
       messages: [
         {
           role: "system",
-          content: formData.systemPrompt || "You are a professional business email writer who specializes in Japanese business correspondence."
+          content: systemPromptContent
         },
         {
           role: "user",
@@ -77,8 +84,6 @@ export const generateEmailReply = async (
       max_tokens: 1000,
       response_format: { type: "json_object" }
     };
-
-    console.log(`Sending request to ${apiEndpoint}`, { headers: { ...headers, Authorization: "[REDACTED]" }, body: requestBody });
 
     // Call to OpenAI API with timeout
     const controller = new AbortController();
@@ -117,7 +122,6 @@ export const generateEmailReply = async (
       }
 
       const data = await response.json();
-      console.log("AI API response:", data);
       
       // JSON形式のレスポンスを解析
       try {
