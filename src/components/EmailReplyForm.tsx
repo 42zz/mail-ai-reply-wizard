@@ -8,7 +8,7 @@ import MessageSection from "./MessageSection";
 import ResponseOutlineSection from "./ResponseOutlineSection";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Mail, User, MessageSquare, Pen, Trash2 } from "lucide-react";
+import { Loader2, Mail, User, MessageSquare, Pen, Trash2, Info, Wand2 } from "lucide-react";
 
 interface EmailReplyFormProps {
   onSubmit: (formData: EmailFormData) => void;
@@ -160,18 +160,14 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
           )}
 
           <Tabs defaultValue="sender" value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-3 mb-6 w-full">
+            <TabsList className="grid grid-cols-2 mb-6 w-full">
               <TabsTrigger value="sender" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
                 <span className="hidden sm:inline">送信者情報</span>
               </TabsTrigger>
               <TabsTrigger value="message" className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
-                <span className="hidden sm:inline">受信情報</span>
-              </TabsTrigger>
-              <TabsTrigger value="response" className="flex items-center gap-2">
-                <Pen className="h-4 w-4" />
-                <span className="hidden sm:inline">返信概要</span>
+                <span className="hidden sm:inline">メール情報</span>
               </TabsTrigger>
             </TabsList>
 
@@ -208,22 +204,51 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
 
             <TabsContent value="message" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
               <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-medium">受信メッセージ</h3>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => clearField("message")}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  受信メッセージをクリア
-                </Button>
+                <h3 className="text-lg font-medium">メール情報</h3>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => clearField("message")}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    受信メッセージをクリア
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => clearField("response")}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    返信概要をクリア
+                  </Button>
+                </div>
               </div>
-              <MessageSection
-                receivedMessage={receivedMessage}
-                setReceivedMessage={setReceivedMessage}
-              />
+              
+              <div className="space-y-6">
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-3 flex items-center space-x-2 text-sm text-blue-700">
+                  <Info className="h-5 w-5 flex-shrink-0" />
+                  <p>受信メッセージと返信概要を入力してください。両方の情報を基に、AIが適切な返信を作成します。</p>
+                </div>
+
+                <div className="space-y-4">
+                  <MessageSection
+                    receivedMessage={receivedMessage}
+                    setReceivedMessage={setReceivedMessage}
+                  />
+                  <div className="border-t border-gray-200 pt-4">
+                    <ResponseOutlineSection
+                      responseOutline={responseOutline}
+                      setResponseOutline={setResponseOutline}
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="flex justify-between mt-6">
                 <Button
                   type="button"
@@ -233,44 +258,8 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
                   戻る
                 </Button>
                 <Button
-                  type="button"
-                  onClick={() => setActiveTab("response")}
-                >
-                  次へ
-                </Button>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="response" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-medium">返信概要</h3>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => clearField("response")}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  返信概要をクリア
-                </Button>
-              </div>
-              <ResponseOutlineSection
-                responseOutline={responseOutline}
-                setResponseOutline={setResponseOutline}
-              />
-              <div className="flex justify-between mt-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setActiveTab("message")}
-                >
-                  戻る
-                </Button>
-                <Button 
-                  type="submit" 
+                  type="submit"
                   disabled={isLoading}
-                  className="bg-gradient-to-r from-blue-500 to-blue-600"
                 >
                   {isLoading ? (
                     <>
@@ -279,8 +268,8 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
                     </>
                   ) : (
                     <>
-                      <Mail className="mr-2 h-4 w-4" />
-                      メールを生成
+                      <Wand2 className="mr-2 h-4 w-4" />
+                      返信を生成
                     </>
                   )}
                 </Button>
