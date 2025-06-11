@@ -29,6 +29,8 @@ interface SenderSectionProps {
   setSenderName: (name: string) => void;
   signature: string;
   setSignature: (signature: string) => void;
+  hideSignature?: boolean;
+  hideSenderName?: boolean;
 }
 
 const SenderSection = ({
@@ -36,6 +38,8 @@ const SenderSection = ({
   setSenderName,
   signature,
   setSignature,
+  hideSignature = false,
+  hideSenderName = false,
 }: SenderSectionProps) => {
   const { 
     signatureTemplates, 
@@ -158,29 +162,34 @@ const SenderSection = ({
 
   return (
     <div className="space-y-4">
-      <div className="bg-blue-50 border-l-4 border-blue-500 p-3 flex items-center space-x-2 text-sm text-blue-700 mb-4">
-        <Info className="h-5 w-5 flex-shrink-0" />
-        <p>送信者情報は、ブラウザに一時的に保存されます。次回利用時に入力が自動的に引き継がれます。</p>
-      </div>
+      {!hideSignature && !hideSenderName && (
+        <div className="bg-blue-50 border-l-4 border-blue-500 p-3 flex items-center space-x-2 text-sm text-blue-700 mb-4">
+          <Info className="h-5 w-5 flex-shrink-0" />
+          <p>送信者情報は、ブラウザに一時的に保存されます。次回利用時に入力が自動的に引き継がれます。</p>
+        </div>
+      )}
 
-      <div className="space-y-2">
-        <label htmlFor="sender-name" className="block text-sm font-medium">
-          送信者名
-        </label>
-        <Input
-          id="sender-name"
-          value={senderName}
-          onChange={(e) => setSenderName(e.target.value)}
-          placeholder="例: 山田太郎"
-          className="w-full"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex justify-between items-center">
-          <label htmlFor="signature" className="block text-sm font-medium">
-            署名（任意）
+      {!hideSenderName && (
+        <div className="space-y-2">
+          <label htmlFor="sender-name" className="block text-sm font-medium">
+            送信者名
           </label>
+          <Input
+            id="sender-name"
+            value={senderName}
+            onChange={(e) => setSenderName(e.target.value)}
+            placeholder="例: 山田太郎"
+            className="w-full"
+          />
+        </div>
+      )}
+
+      {!hideSignature && (
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <label htmlFor="signature" className="block text-sm font-medium">
+              署名（任意）
+            </label>
           <div className="flex space-x-2">
             <Dialog open={isAddingTemplate} onOpenChange={setIsAddingTemplate}>
               <DialogTrigger asChild>
@@ -343,12 +352,14 @@ const SenderSection = ({
           className="min-h-[100px] w-full"
           autoResize={true}
         />
-      </div>
+        </div>
+      )}
 
-      <div className="space-y-2">
+      {(hideSenderName && hideSignature) && (
+        <div className="space-y-2">
         <div className="flex justify-between items-center">
           <label className="block text-sm font-medium">
-            スタイル例（3-5件）
+            文面例（3-5件）
           </label>
           <div className="text-sm text-gray-500">
             {styleExamples.length}/5 件
@@ -360,7 +371,7 @@ const SenderSection = ({
             <Textarea
               value={newExample}
               onChange={(e) => setNewExample(e.target.value)}
-              placeholder="新しいスタイル例を入力してください。&#10;例：&#10;お世話になっております。&#10;ご依頼いただいた件について、確認いたしましたので、ご報告させていただきます。"
+              placeholder="新しい文面例を入力してください。&#10;例：&#10;お世話になっております。&#10;ご依頼いただいた件について、確認いたしましたので、ご報告させていただきます。"
               className="min-h-[120px] w-full mb-2"
               autoResize={true}
             />
@@ -413,7 +424,8 @@ const SenderSection = ({
             </ul>
           </div>
         )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

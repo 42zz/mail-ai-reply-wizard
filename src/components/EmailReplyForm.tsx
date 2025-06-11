@@ -8,8 +8,14 @@ import MessageSection from "./MessageSection";
 import ResponseOutlineSection from "./ResponseOutlineSection";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Mail, User, MessageSquare, Pen, Trash2, Info, Wand2, Settings } from "lucide-react";
+import { Loader2, User, MessageSquare, Trash2, Info, Wand2 } from "lucide-react";
 import AdjustmentSection from "./AdjustmentSection";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface EmailReplyFormProps {
   onSubmit: (formData: EmailFormData) => void;
@@ -207,21 +213,62 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
                   送信者情報をクリア
                 </Button>
               </div>
-              <DateSection date={date} setDate={setDate} />
               
-              <AdjustmentSection
-                tone={tone}
-                setTone={setTone}
-                length={length}
-                setLength={setLength}
-              />
+              <Accordion type="multiple" defaultValue={[]} className="w-full">
+                <AccordionItem value="date">
+                  <AccordionTrigger className="text-sm font-medium">
+                    日付設定
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <DateSection date={date} setDate={setDate} />
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="adjustment">
+                  <AccordionTrigger className="text-sm font-medium">
+                    返信スタイル調整
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <AdjustmentSection
+                      tone={tone}
+                      setTone={setTone}
+                      length={length}
+                      setLength={setLength}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="sender">
+                  <AccordionTrigger className="text-sm font-medium">
+                    送信者情報
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <SenderSection
+                      senderName={senderName}
+                      setSenderName={setSenderName}
+                      signature={signature}
+                      setSignature={setSignature}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="style">
+                  <AccordionTrigger className="text-sm font-medium">
+                    文面例
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <SenderSection
+                      senderName=""
+                      setSenderName={() => {}}
+                      signature=""
+                      setSignature={() => {}}
+                      hideSenderName={true}
+                      hideSignature={true}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
               
-              <SenderSection
-                senderName={senderName}
-                setSenderName={setSenderName}
-                signature={signature}
-                setSignature={setSignature}
-              />
               <div className="flex justify-end mt-6">
                 <Button
                   type="button"
