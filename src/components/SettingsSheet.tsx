@@ -1,4 +1,4 @@
-import { Cog, KeyRound, ExternalLink, RotateCcw } from "lucide-react";
+import { Cog, KeyRound, ExternalLink, RotateCcw, Download, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -22,9 +22,10 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator";
 
 const SettingsSheet = () => {
-  const { model, setModel, systemPrompt, setSystemPrompt, apiKeys, setApiKey } =
+  const { model, setModel, systemPrompt, setSystemPrompt, apiKeys, setApiKey, signatureTemplates, styleExamples } =
     useSettings();
   const [showApiKeys, setShowApiKeys] = useState(false);
   const { toast } = useToast();
@@ -70,6 +71,107 @@ const SettingsSheet = () => {
   // APIプロバイダーのドキュメントへのリンク
   const getApiDocLink = () => {
     return "https://platform.openai.com/api-keys";
+  };
+
+  // 設定をエクスポートする関数
+  const exportSettings = () => {
+    try {
+      const settings = {
+        model,
+        systemPrompt,
+        apiKeys,
+        signatureTemplates,
+        styleExamples,
+        exportDate: new Date().toISOString(),
+        version: "1.0"
+      };
+
+      const dataStr = JSON.stringify(settings, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `mail-ai-settings-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "エクスポート完了",
+        description: "設定をファイルに保存しました。",
+      });
+    } catch (error) {
+      toast({
+        title: "エクスポートエラー",
+        description: "設定のエクスポートに失敗しました。",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // 設定をインポートする関数
+  const importSettings = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const result = e.target?.result;
+        if (typeof result !== 'string') return;
+
+        const settings = JSON.parse(result);
+        
+        // 基本的なバリデーション
+        if (!settings || typeof settings !== 'object') {
+          throw new Error('Invalid settings format');
+        }
+
+        // 設定を適用
+        if (settings.model && typeof settings.model === 'string') {
+          setModel(settings.model);
+        }
+        if (settings.systemPrompt && typeof settings.systemPrompt === 'string') {
+          setSystemPrompt(settings.systemPrompt);
+        }
+        if (settings.apiKeys && typeof settings.apiKeys === 'object') {
+          if (settings.apiKeys.openai && typeof settings.apiKeys.openai === 'string') {
+            setApiKey('openai', settings.apiKeys.openai);
+          }
+        }
+        
+        // signatureTemplatesとstyleExamplesはlocalStorageに直接設定
+        if (Array.isArray(settings.signatureTemplates)) {
+          localStorage.setItem('signature_templates', JSON.stringify(settings.signatureTemplates));
+        }
+        if (Array.isArray(settings.styleExamples)) {
+          localStorage.setItem('style_examples', JSON.stringify(settings.styleExamples));
+        }
+
+        toast({
+          title: "インポート完了",
+          description: "設定を読み込みました。ページを再読み込みしてください。",
+        });
+
+        // ページをリロードして設定を反映
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+
+      } catch (error) {
+        toast({
+          title: "インポートエラー",
+          description: "設定ファイルの読み込みに失敗しました。ファイル形式を確認してください。",
+          variant: "destructive",
+        });
+      }
+    };
+
+    reader.readAsText(file);
+    // ファイル選択をリセット
+    event.target.value = '';
   };
 
   return (
@@ -183,6 +285,42 @@ const SettingsSheet = () => {
             <p className="text-xs text-muted-foreground">
               AIモデルに与える指示文です。メール生成の性質を決定します。編集後は自動的に保存されます。
             </p>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-3">
+            <Label>設定のバックアップ</Label>
+            <p className="text-xs text-muted-foreground">
+              ブラウザ環境を変更する際の設定移行にご利用ください。
+            </p>
+            <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
+              <Button
+                variant="outline"
+                onClick={exportSettings}
+                className="flex-1"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                設定をエクスポート
+              </Button>
+              <div className="flex-1">
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={importSettings}
+                  className="hidden"
+                  id="import-settings"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => document.getElementById('import-settings')?.click()}
+                  className="w-full"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  設定をインポート
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </SheetContent>
