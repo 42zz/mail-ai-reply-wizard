@@ -7,6 +7,8 @@ export interface EmailFormData {
   signature?: string; // Make signature optional
   receivedMessage: string;
   responseOutline: string;
+  tone?: number; // 0-100: 0=formal, 100=casual
+  length?: number; // 0-100: 0=concise, 100=detailed
 }
 
 export function useEmailGeneration() {
@@ -23,6 +25,8 @@ export function useEmailGeneration() {
         model, // 選択されたモデルを使用
         systemPrompt,
         style_examples: styleExamples,
+        tone: formData.tone,
+        length: formData.length,
       }, apiKeys.openai);
 
       // Add additional validation to ensure content exists

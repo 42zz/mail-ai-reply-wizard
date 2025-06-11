@@ -8,7 +8,8 @@ import MessageSection from "./MessageSection";
 import ResponseOutlineSection from "./ResponseOutlineSection";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Mail, User, MessageSquare, Pen, Trash2, Info, Wand2 } from "lucide-react";
+import { Loader2, Mail, User, MessageSquare, Pen, Trash2, Info, Wand2, Settings } from "lucide-react";
+import AdjustmentSection from "./AdjustmentSection";
 
 interface EmailReplyFormProps {
   onSubmit: (formData: EmailFormData) => void;
@@ -22,6 +23,9 @@ export interface EmailFormData {
   signature?: string; // Make signature optional
   receivedMessage: string;
   responseOutline: string;
+  // Advanced adjustment options
+  tone?: number; // 0-100: 0=formal, 100=casual
+  length?: number; // 0-100: 0=concise, 100=detailed
 }
 
 const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProps) => {
@@ -31,6 +35,8 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
   const [signature, setSignature] = useState(initialData?.signature || "");
   const [receivedMessage, setReceivedMessage] = useState(initialData?.receivedMessage || "");
   const [responseOutline, setResponseOutline] = useState(initialData?.responseOutline || "");
+  const [tone, setTone] = useState(initialData?.tone !== undefined ? initialData.tone : 25); // Default to formal/polite
+  const [length, setLength] = useState(initialData?.length !== undefined ? initialData.length : 50); // Default to standard length
   const [errors, setErrors] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("sender");
   const [showErrors, setShowErrors] = useState(false);
@@ -42,12 +48,18 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
       setSignature(initialData.signature || "");
       setReceivedMessage(initialData.receivedMessage);
       setResponseOutline(initialData.responseOutline);
+      setTone(initialData.tone !== undefined ? initialData.tone : 25);
+      setLength(initialData.length !== undefined ? initialData.length : 50);
     } else {
       const savedSenderName = localStorage.getItem('senderName');
       const savedSignature = localStorage.getItem('signature');
+      const savedTone = localStorage.getItem('tone');
+      const savedLength = localStorage.getItem('length');
 
       if (savedSenderName) setSenderName(savedSenderName);
       if (savedSignature) setSignature(savedSignature);
+      if (savedTone !== null) setTone(parseInt(savedTone));
+      if (savedLength !== null) setLength(parseInt(savedLength));
     }
   }, [initialData]);
 
@@ -58,6 +70,8 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
       setSignature("");
       setReceivedMessage("");
       setResponseOutline("");
+      setTone(25);
+      setLength(50);
       setErrors([]);
       setShowErrors(false);
       setActiveTab("sender");
@@ -80,6 +94,11 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
       localStorage.setItem('signature', signature);
     }
   }, [senderName, signature]);
+
+  useEffect(() => {
+    localStorage.setItem('tone', tone.toString());
+    localStorage.setItem('length', length.toString());
+  }, [tone, length]);
 
   const validateForm = (): boolean => {
     const newErrors: string[] = [];
@@ -111,6 +130,8 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
       signature: signature.trim() ? signature : undefined, // Only include signature if it's not empty
       receivedMessage,
       responseOutline,
+      tone,
+      length,
     };
 
     onSubmit(formData);
@@ -122,6 +143,7 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
         setDate(new Date());
         setSenderName("");
         setSignature("");
+        // トーンと長さの設定は保持する
         break;
       case "message":
         setReceivedMessage("");
@@ -186,6 +208,14 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
                 </Button>
               </div>
               <DateSection date={date} setDate={setDate} />
+              
+              <AdjustmentSection
+                tone={tone}
+                setTone={setTone}
+                length={length}
+                setLength={setLength}
+              />
+              
               <SenderSection
                 senderName={senderName}
                 setSenderName={setSenderName}
