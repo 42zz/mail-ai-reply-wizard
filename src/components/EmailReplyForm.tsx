@@ -8,7 +8,14 @@ import MessageSection from "./MessageSection";
 import ResponseOutlineSection from "./ResponseOutlineSection";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Mail, User, MessageSquare, Pen, Trash2, Info, Wand2 } from "lucide-react";
+import { Loader2, User, MessageSquare, Trash2, Info, Wand2 } from "lucide-react";
+import AdjustmentSection from "./AdjustmentSection";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface EmailReplyFormProps {
   onSubmit: (formData: EmailFormData) => void;
@@ -22,6 +29,9 @@ export interface EmailFormData {
   signature?: string; // Make signature optional
   receivedMessage: string;
   responseOutline: string;
+  // Advanced adjustment options
+  tone?: number; // 0-100: 0=formal, 100=casual
+  length?: number; // 0-100: 0=concise, 100=detailed
 }
 
 const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProps) => {
@@ -31,6 +41,8 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
   const [signature, setSignature] = useState(initialData?.signature || "");
   const [receivedMessage, setReceivedMessage] = useState(initialData?.receivedMessage || "");
   const [responseOutline, setResponseOutline] = useState(initialData?.responseOutline || "");
+  const [tone, setTone] = useState(initialData?.tone !== undefined ? initialData.tone : 25); // Default to formal/polite
+  const [length, setLength] = useState(initialData?.length !== undefined ? initialData.length : 50); // Default to standard length
   const [errors, setErrors] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("sender");
   const [showErrors, setShowErrors] = useState(false);
@@ -42,12 +54,18 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
       setSignature(initialData.signature || "");
       setReceivedMessage(initialData.receivedMessage);
       setResponseOutline(initialData.responseOutline);
+      setTone(initialData.tone !== undefined ? initialData.tone : 25);
+      setLength(initialData.length !== undefined ? initialData.length : 50);
     } else {
       const savedSenderName = localStorage.getItem('senderName');
       const savedSignature = localStorage.getItem('signature');
+      const savedTone = localStorage.getItem('tone');
+      const savedLength = localStorage.getItem('length');
 
       if (savedSenderName) setSenderName(savedSenderName);
       if (savedSignature) setSignature(savedSignature);
+      if (savedTone !== null) setTone(parseInt(savedTone));
+      if (savedLength !== null) setLength(parseInt(savedLength));
     }
   }, [initialData]);
 
@@ -58,6 +76,8 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
       setSignature("");
       setReceivedMessage("");
       setResponseOutline("");
+      setTone(25);
+      setLength(50);
       setErrors([]);
       setShowErrors(false);
       setActiveTab("sender");
@@ -80,6 +100,11 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
       localStorage.setItem('signature', signature);
     }
   }, [senderName, signature]);
+
+  useEffect(() => {
+    localStorage.setItem('tone', tone.toString());
+    localStorage.setItem('length', length.toString());
+  }, [tone, length]);
 
   const validateForm = (): boolean => {
     const newErrors: string[] = [];
@@ -111,6 +136,8 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
       signature: signature.trim() ? signature : undefined, // Only include signature if it's not empty
       receivedMessage,
       responseOutline,
+      tone,
+      length,
     };
 
     onSubmit(formData);
@@ -122,6 +149,7 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
         setDate(new Date());
         setSenderName("");
         setSignature("");
+        // トーンと長さの設定は保持する
         break;
       case "message":
         setReceivedMessage("");
@@ -163,7 +191,7 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
             <TabsList className="grid grid-cols-2 mb-6 w-full">
               <TabsTrigger value="sender" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
-                <span className="hidden sm:inline">送信者情報</span>
+                <span className="hidden sm:inline">送信設定</span>
               </TabsTrigger>
               <TabsTrigger value="message" className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
@@ -173,7 +201,7 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
 
             <TabsContent value="sender" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
               <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-medium">送信者情報</h3>
+                <h3 className="text-lg font-medium">送信設定</h3>
                 <Button
                   type="button"
                   variant="outline"
@@ -185,13 +213,62 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
                   送信者情報をクリア
                 </Button>
               </div>
-              <DateSection date={date} setDate={setDate} />
-              <SenderSection
-                senderName={senderName}
-                setSenderName={setSenderName}
-                signature={signature}
-                setSignature={setSignature}
-              />
+              
+              <Accordion type="multiple" defaultValue={[]} className="w-full">
+                <AccordionItem value="date">
+                  <AccordionTrigger className="text-sm font-medium">
+                    日付設定
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <DateSection date={date} setDate={setDate} />
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="adjustment">
+                  <AccordionTrigger className="text-sm font-medium">
+                    返信スタイル調整
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <AdjustmentSection
+                      tone={tone}
+                      setTone={setTone}
+                      length={length}
+                      setLength={setLength}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="sender">
+                  <AccordionTrigger className="text-sm font-medium">
+                    送信者情報
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <SenderSection
+                      senderName={senderName}
+                      setSenderName={setSenderName}
+                      signature={signature}
+                      setSignature={setSignature}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="style">
+                  <AccordionTrigger className="text-sm font-medium">
+                    文面例
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <SenderSection
+                      senderName=""
+                      setSenderName={() => {}}
+                      signature=""
+                      setSignature={() => {}}
+                      hideSenderName={true}
+                      hideSignature={true}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+              
               <div className="flex justify-end mt-6">
                 <Button
                   type="button"

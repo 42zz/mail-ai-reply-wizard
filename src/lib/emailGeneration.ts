@@ -10,6 +10,8 @@ interface EmailGenerationRequest {
   model?: string;
   systemPrompt?: string;
   style_examples?: string[];
+  tone?: number; // 0-100: 0=formal, 100=casual
+  length?: number; // 0-100: 0=concise, 100=detailed
 }
 
 // EmailFormData をインポート (HistoryEntry で使用)
@@ -91,6 +93,23 @@ export const generateEmailReply = async (
       ? formData.date.toISOString().split('T')[0]
       : formData.date;
 
+    // Generate tone and length instructions based on parameters
+    const getToneInstruction = (tone?: number) => {
+      if (tone === undefined) return "";
+      if (tone <= 25) return "非常に丁寧で正式なビジネストーンを使用してください。敬語を厳密に使い分け、「いつもお世話になっております」などの定型的な表現を含めてください。";
+      if (tone <= 50) return "丁寧なビジネストーンを使用してください。適切な敬語を使いつつ、親しみやすさも感じられるように書いてください。";
+      if (tone <= 75) return "親しみやすく適度にカジュアルなトーンを使用してください。敬語は使いますが、堅苦しくない表現を心がけてください。";
+      return "フレンドリーでカジュアルなトーンを使用してください。「です・ます」調は維持しつつ、「〜ですね」「〜していただけると嬉しいです」など親近感のある表現を使い、絵文字や感嘆符も適度に使用して温かみのある文章にしてください。";
+    };
+
+    const getLengthInstruction = (length?: number) => {
+      if (length === undefined) return "";
+      if (length <= 25) return "簡潔で要点を絞った返信にしてください。";
+      if (length <= 50) return "適度な長さで必要な情報を含む返信にしてください。";
+      if (length <= 75) return "詳細な説明を含む丁寧な返信にしてください。";
+      return "非常に詳細で包括的な返信にしてください。";
+    };
+
     // Create XML formatted input - updated to match the new system prompt format
     const xmlInput = `
 <input>
@@ -100,6 +119,11 @@ export const generateEmailReply = async (
   <received_message>${formData.received_message}</received_message>
   <response_outline>${formData.response_outline}</response_outline>
 </input>
+
+<style_adjustments>
+${getToneInstruction(formData.tone)}
+${getLengthInstruction(formData.length)}
+</style_adjustments>
 `;
 
     // Map the selected model to OpenAI model or handle other APIs based on selection
