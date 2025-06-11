@@ -108,12 +108,25 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
 
   const validateForm = (): boolean => {
     const newErrors: string[] = [];
+    let shouldSwitchToMessageTab = false;
 
     if (!senderName.trim()) newErrors.push("送信者名を入力してください");
-    if (!receivedMessage.trim()) newErrors.push("受信メッセージ内容を入力してください");
-    if (!responseOutline.trim()) newErrors.push("返信内容の概要を入力してください");
+    if (!receivedMessage.trim()) {
+      newErrors.push("受信メッセージ内容を入力してください");
+      shouldSwitchToMessageTab = true;
+    }
+    if (!responseOutline.trim()) {
+      newErrors.push("返信内容の概要を入力してください");
+      shouldSwitchToMessageTab = true;
+    }
 
     setErrors(newErrors);
+    
+    // メール情報タブの項目でエラーがある場合、そのタブに遷移
+    if (shouldSwitchToMessageTab && newErrors.length > 0) {
+      setActiveTab("message");
+    }
+    
     return newErrors.length === 0;
   };
 
@@ -269,14 +282,6 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
                 </AccordionItem>
               </Accordion>
               
-              <div className="flex justify-end mt-6">
-                <Button
-                  type="button"
-                  onClick={() => setActiveTab("message")}
-                >
-                  次へ
-                </Button>
-              </div>
             </TabsContent>
 
             <TabsContent value="message" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
@@ -326,33 +331,28 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
                 </div>
               </div>
 
-              <div className="flex justify-between mt-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setActiveTab("sender")}
-                >
-                  戻る
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      生成中...
-                    </>
-                  ) : (
-                    <>
-                      <Wand2 className="mr-2 h-4 w-4" />
-                      返信を生成
-                    </>
-                  )}
-                </Button>
-              </div>
             </TabsContent>
           </Tabs>
+          
+          <div className="mt-8">
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  生成中...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="mr-2 h-4 w-4" />
+                  返信を生成
+                </>
+              )}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </form>
