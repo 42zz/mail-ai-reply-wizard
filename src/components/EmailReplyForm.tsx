@@ -191,7 +191,7 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
             <TabsList className="grid grid-cols-2 mb-6 w-full">
               <TabsTrigger value="sender" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
-                <span className="hidden sm:inline">送信者情報</span>
+                <span className="hidden sm:inline">送信設定</span>
               </TabsTrigger>
               <TabsTrigger value="message" className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
@@ -201,7 +201,7 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
 
             <TabsContent value="sender" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
               <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-medium">送信者情報</h3>
+                <h3 className="text-lg font-medium">送信設定</h3>
                 <Button
                   type="button"
                   variant="outline"
