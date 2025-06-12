@@ -36,7 +36,6 @@ const EmailReplyResult = ({
   const { toast } = useToast();
   const [isSubjectCopied, setIsSubjectCopied] = useState(false);
   const [isContentCopied, setIsContentCopied] = useState(false);
-  const [isAllCopied, setIsAllCopied] = useState(false);
   const [editableContent, setEditableContent] = useState(content);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [isAdjustmentModalOpen, setIsAdjustmentModalOpen] = useState(false);
@@ -66,9 +65,6 @@ const EmailReplyResult = ({
       } else if (type === "content") {
         setIsContentCopied(true);
         setTimeout(() => setIsContentCopied(false), 2000);
-      } else {
-        setIsAllCopied(true);
-        setTimeout(() => setIsAllCopied(false), 2000);
       }
 
       toast({
@@ -84,10 +80,6 @@ const EmailReplyResult = ({
     }
   };
 
-  const copyAllToClipboard = async () => {
-    const allText = subject ? `${subject}\n\n${editableContent}` : editableContent;
-    await copyToClipboard(allText, "all");
-  };
 
   const formatHistoryTimestamp = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -234,10 +226,10 @@ const EmailReplyResult = ({
             />
           </div>
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex pt-2">
             <Button
               variant="outline"
-              className="flex-1"
+              className="w-full bg-blue-50 hover:bg-blue-100 border-blue-200"
               onClick={() => setIsAdjustmentModalOpen(true)}
               disabled={isAdjusting}
             >
@@ -252,19 +244,6 @@ const EmailReplyResult = ({
                   文章調整
                 </>
               )}
-            </Button>
-            <Button
-              variant="default"
-              className="flex-1"
-              onClick={copyAllToClipboard}
-              disabled={isAdjusting}
-            >
-              {isAllCopied ? (
-                <Check className="h-4 w-4 mr-2" />
-              ) : (
-                <Copy className="h-4 w-4 mr-2" />
-              )}
-              全文コピー
             </Button>
           </div>
         </CardContent>
