@@ -12,8 +12,9 @@ import { HistoryEntry } from "@/types";
 const Index = () => {
   const { toast } = useToast();
   const { apiKeys } = useSettings();
-  const { generateEmail } = useEmailGeneration();
+  const { generateEmail, adjustText } = useEmailGeneration();
   const [isLoading, setIsLoading] = useState(false);
+  const [isAdjusting, setIsAdjusting] = useState(false);
   const [generatedSubject, setGeneratedSubject] = useState<string | undefined>(undefined);
   const [generatedContent, setGeneratedContent] = useState("");
   const [currentFormData, setCurrentFormData] = useState<EmailFormData | undefined>(undefined);
@@ -90,6 +91,73 @@ const Index = () => {
     });
   };
 
+  const handleTextAdjustment = async (customPrompt: string) => {
+    if (!hasApiKey) {
+      toast({
+        title: "APIキーエラー",
+        description: "OpenAI APIキーが設定されていません。設定画面で追加してください。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!generatedContent) {
+      toast({
+        title: "エラー",
+        description: "調整する文章がありません。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsAdjusting(true);
+    try {
+      const response = await adjustText(
+        generatedContent,
+        customPrompt,
+        currentFormData?.tone,
+        currentFormData?.length
+      );
+
+      if (response.success) {
+        if (response.subject) {
+          setGeneratedSubject(response.subject);
+        }
+        setGeneratedContent(response.content);
+        toast({
+          title: "文章調整完了",
+          description: "文章が正常に調整されました。",
+        });
+      } else {
+        let errorMessage = "文章調整中にエラーが発生しました。もう一度お試しください。";
+        if (response.error === "API_KEY_MISSING") {
+          errorMessage = "OpenAI APIキーが設定されていません。設定画面で追加してください。";
+        } else if (response.error === "INVALID_API_KEY") {
+          errorMessage = "OpenAI APIキーが無効です。設定画面で正しいAPIキーを設定してください。";
+        } else if (response.error === "RATE_LIMIT_EXCEEDED") {
+          errorMessage = "APIリクエスト制限に達しました。しばらく時間をおいてから再試行してください。";
+        } else if (response.error === "EMPTY_RESPONSE") {
+          errorMessage = "AIが空の調整結果を生成しました。入力内容を確認して再度お試しください。";
+        }
+
+        toast({
+          title: "エラー",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error adjusting text:", error);
+      toast({
+        title: "エラー",
+        description: "文章調整中に予期せぬエラーが発生しました。ネットワーク接続などを確認してください。",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAdjusting(false);
+    }
+  };
+
   const openSettings = () => {
     const settingsButton = document.querySelector('[aria-label="設定"]') as HTMLButtonElement;
     if (settingsButton) {
@@ -151,6 +219,8 @@ const Index = () => {
               onReset={handleReset}
               onEdit={() => {/* 実装なし */}}
               onHistorySelect={handleHistorySelect}
+              onTextAdjustment={handleTextAdjustment}
+              isAdjusting={isAdjusting}
             />
           </div>
         </div>

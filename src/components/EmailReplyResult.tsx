@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, RefreshCcw, Check, AlertTriangle, History, Clock, Trash2, X } from "lucide-react";
+import { Copy, RefreshCcw, Check, AlertTriangle, History, Clock, Trash2, X, Wand2 } from "lucide-react";
 import { HistoryEntry } from "@/types";
 import {
   DropdownMenu,
@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import TextAdjustmentModal from "@/components/TextAdjustmentModal";
 
 interface EmailReplyResultProps {
   subject?: string;
@@ -20,15 +21,25 @@ interface EmailReplyResultProps {
   onReset: () => void;
   onEdit: () => void;
   onHistorySelect: (entry: HistoryEntry) => void;
+  onTextAdjustment: (customPrompt: string) => void;
+  isAdjusting: boolean;
 }
 
-const EmailReplyResult = ({ subject, content, onReset, onHistorySelect }: EmailReplyResultProps) => {
+const EmailReplyResult = ({ 
+  subject, 
+  content, 
+  onReset, 
+  onHistorySelect, 
+  onTextAdjustment, 
+  isAdjusting 
+}: EmailReplyResultProps) => {
   const { toast } = useToast();
   const [isSubjectCopied, setIsSubjectCopied] = useState(false);
   const [isContentCopied, setIsContentCopied] = useState(false);
   const [isAllCopied, setIsAllCopied] = useState(false);
   const [editableContent, setEditableContent] = useState(content);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [isAdjustmentModalOpen, setIsAdjustmentModalOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -106,6 +117,11 @@ const EmailReplyResult = ({ subject, content, onReset, onHistorySelect }: EmailR
         variant: "destructive",
       });
     }
+  };
+
+  const handleTextAdjustment = (customPrompt: string) => {
+    setIsAdjustmentModalOpen(false);
+    onTextAdjustment(customPrompt);
   };
 
   if (!content) {
@@ -222,15 +238,26 @@ const EmailReplyResult = ({ subject, content, onReset, onHistorySelect }: EmailR
             <Button
               variant="outline"
               className="flex-1"
-              onClick={onReset}
+              onClick={() => setIsAdjustmentModalOpen(true)}
+              disabled={isAdjusting}
             >
-              <RefreshCcw className="h-4 w-4 mr-2" />
-              新規作成
+              {isAdjusting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
+                  調整中...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="h-4 w-4 mr-2" />
+                  文章調整
+                </>
+              )}
             </Button>
             <Button
               variant="default"
               className="flex-1"
               onClick={copyAllToClipboard}
+              disabled={isAdjusting}
             >
               {isAllCopied ? (
                 <Check className="h-4 w-4 mr-2" />
@@ -242,6 +269,13 @@ const EmailReplyResult = ({ subject, content, onReset, onHistorySelect }: EmailR
           </div>
         </CardContent>
       </Card>
+
+      <TextAdjustmentModal
+        isOpen={isAdjustmentModalOpen}
+        onClose={() => setIsAdjustmentModalOpen(false)}
+        onAdjust={handleTextAdjustment}
+        isLoading={isAdjusting}
+      />
     </div>
   );
 };
