@@ -174,11 +174,11 @@ const Index = () => {
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              リプライマスター
+              AIメールアシスタント
               <Sparkles className="h-4 w-4 text-yellow-500" />
             </h1>
             <p className="text-sm text-gray-600">
-              必要な情報を入力するだけで、AIが適切なビジネスメールの返信文を生成します。
+              必要な情報を入力するだけで、AIが適切なビジネスメールを生成します。新規メール作成と返信メール作成の両方に対応。
             </p>
           </div>
         </div>
@@ -246,7 +246,7 @@ const Index = () => {
                 />
               </svg>
             </a>
-            <p>© 2025 リプライマスター</p>
+            <p>© 2025 AIメールアシスタント</p>
           </div>
         </div>
       </div>
