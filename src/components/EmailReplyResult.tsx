@@ -5,6 +5,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Copy, RefreshCcw, Check, AlertTriangle, History, Clock, Trash2, X, Wand2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { getShortcutText } from "@/lib/platform";
 import { HistoryEntry } from "@/types";
 import {
   DropdownMenu,
@@ -303,24 +305,34 @@ const EmailReplyResult = ({
           </div>
 
           <div className="flex pt-2">
-            <Button
-              variant="outline"
-              className="w-full bg-blue-50 hover:bg-blue-100 border-blue-200"
-              onClick={() => setIsAdjustmentModalOpen(true)}
-              disabled={isAdjusting}
-            >
-              {isAdjusting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
-                  調整中...
-                </>
-              ) : (
-                <>
-                  <Wand2 className="h-4 w-4 mr-2" />
-                  文章調整
-                </>
-              )}
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full bg-blue-50 hover:bg-blue-100 border-blue-200"
+                    onClick={() => setIsAdjustmentModalOpen(true)}
+                    disabled={isAdjusting}
+                    data-adjustment-button
+                  >
+                    {isAdjusting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
+                        調整中...
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="h-4 w-4 mr-2" />
+                        文章調整
+                      </>
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{getShortcutText('e', { ctrl: true })}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </CardContent>
       </Card>

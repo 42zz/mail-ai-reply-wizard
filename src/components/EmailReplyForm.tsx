@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,6 +9,8 @@ import ResponseOutlineSection from "./ResponseOutlineSection";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, User, MessageSquare, Trash2, Info, Wand2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { getShortcutText } from "@/lib/platform";
 import AdjustmentSection from "./AdjustmentSection";
 import {
   Accordion,
@@ -21,6 +23,8 @@ interface EmailReplyFormProps {
   onSubmit: (formData: EmailFormData) => void;
   isLoading: boolean;
   initialData?: EmailFormData;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
 export interface EmailFormData {
@@ -34,7 +38,17 @@ export interface EmailFormData {
   length?: number; // 0-100: 0=concise, 100=detailed
 }
 
-const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProps) => {
+interface EmailReplyFormRef extends HTMLFormElement {
+  resetMessageTab: () => void;
+}
+
+const EmailReplyForm = forwardRef<EmailReplyFormRef, EmailReplyFormProps>(({ 
+  onSubmit, 
+  isLoading, 
+  initialData, 
+  activeTab: externalActiveTab, 
+  onTabChange
+}, ref) => {
   const { toast } = useToast();
   const [date, setDate] = useState<Date>(initialData?.date || new Date());
   const [senderName, setSenderName] = useState(initialData?.senderName || "");
@@ -44,7 +58,7 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
   const [tone, setTone] = useState(initialData?.tone !== undefined ? initialData.tone : 25); // Default to formal/polite
   const [length, setLength] = useState(initialData?.length !== undefined ? initialData.length : 50); // Default to standard length
   const [errors, setErrors] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState("sender");
+  const [activeTab, setActiveTab] = useState(externalActiveTab || "sender");
   const [showErrors, setShowErrors] = useState(false);
 
   useEffect(() => {
@@ -180,8 +194,37 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
     });
   };
 
+  // メール情報タブをリセット
+  const resetMessageTab = () => {
+    setReceivedMessage("");
+    setResponseOutline("");
+    if (onTabChange) {
+      onTabChange('message');
+    }
+  };
+
+  // 外部からのリセット要求を処理
+  useImperativeHandle(ref, () => ({
+    resetMessageTab
+  }), []);
+
+  // externalActiveTabが変更されたときに内部のstateを更新
+  useEffect(() => {
+    if (externalActiveTab) {
+      setActiveTab(externalActiveTab);
+    }
+  }, [externalActiveTab]);
+
+  // タブ変更時の処理
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (onTabChange) {
+      onTabChange(value);
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="w-full animate-fade-in">
+    <form ref={ref} onSubmit={handleSubmit} className="w-full animate-fade-in">
       <Card className="w-full border-none shadow-lg overflow-hidden glass-card">
         <CardContent className="p-6 sm:p-8">
           {showErrors && errors.length > 0 && (
@@ -196,7 +239,7 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
             </Alert>
           )}
 
-          <Tabs defaultValue="sender" value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs defaultValue="sender" value={activeTab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="grid grid-cols-2 mb-6 w-full">
               <TabsTrigger value="sender" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
@@ -331,28 +374,39 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
           </Tabs>
           
           <div className="mt-8">
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  生成中...
-                </>
-              ) : (
-                <>
-                  <Wand2 className="mr-2 h-4 w-4" />
-                  メール生成
-                </>
-              )}
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        生成中...
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="mr-2 h-4 w-4" />
+                        メール生成
+                      </>
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{getShortcutText('Enter', { ctrl: true })}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </CardContent>
       </Card>
     </form>
   );
-};
+});
+
+EmailReplyForm.displayName = "EmailReplyForm";
 
 export default EmailReplyForm;

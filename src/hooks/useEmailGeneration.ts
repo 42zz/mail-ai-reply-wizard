@@ -5,7 +5,7 @@ export interface EmailFormData {
   date: Date;
   senderName: string;
   signature?: string; // Make signature optional
-  receivedMessage: string;
+  receivedMessage?: string; // Make receivedMessage optional for new email creation
   responseOutline: string;
   tone?: number; // 0-100: 0=formal, 100=casual
   length?: number; // 0-100: 0=concise, 100=detailed
@@ -20,7 +20,7 @@ export function useEmailGeneration() {
         signatures: formData.signature || "", // Use empty string if signature is undefined
         sender_name: formData.senderName,
         recipient_name: "様", // デフォルト値を設定
-        received_message: formData.receivedMessage,
+        received_message: formData.receivedMessage || "",
         response_outline: formData.responseOutline,
         model, // 選択されたモデルを使用
         systemPrompt,
