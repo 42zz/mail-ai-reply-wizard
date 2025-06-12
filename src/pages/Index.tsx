@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import EmailReplyForm, { EmailFormData } from "@/components/EmailReplyForm";
 import EmailReplyResult from "@/components/EmailReplyResult";
 import { useEmailGeneration } from "@/hooks/useEmailGeneration";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Sparkles, AlertTriangle, Settings } from "lucide-react";
+import { Mail, Sparkles, AlertTriangle, Settings, HelpCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSettings } from "@/contexts/SettingsContext";
 import { Button } from "@/components/ui/button";
 import { HistoryEntry } from "@/types";
+import { useShortcuts, ShortcutAction } from "@/hooks/useShortcuts";
+import ShortcutHelpModal from "@/components/ShortcutHelpModal";
 
 const Index = () => {
   const { toast } = useToast();
@@ -18,6 +20,9 @@ const Index = () => {
   const [generatedSubject, setGeneratedSubject] = useState<string | undefined>(undefined);
   const [generatedContent, setGeneratedContent] = useState("");
   const [currentFormData, setCurrentFormData] = useState<EmailFormData | undefined>(undefined);
+  const [activeTab, setActiveTab] = useState("sender");
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+  const formRef = useRef<any>(null);
   
   const hasApiKey = !!apiKeys.openai && apiKeys.openai.trim() !== "";
 
@@ -71,15 +76,35 @@ const Index = () => {
     }
   };
 
-  const handleReset = () => {
+  // メール情報タブのみリセット
+  const handleResetMessageTab = () => {
+    // formRefを通じてリセット関数を呼び出し
+    if (formRef.current?.resetMessageTab) {
+      formRef.current.resetMessageTab();
+      toast({
+        title: "リセット完了",
+        description: "メール情報をクリアしました。",
+      });
+    }
+  };
+
+  // 完全リセット（右パネルから呼ばれる）
+  const handleFullReset = () => {
     setCurrentFormData(undefined);
     setGeneratedSubject(undefined);
     setGeneratedContent("");
-    const formElement = document.querySelector('form') as HTMLFormElement;
-    if (formElement) {
-      const resetEvent = new Event('reset', { bubbles: true });
-      formElement.dispatchEvent(resetEvent);
+    // フォーム全体をリセット
+    if (formRef.current) {
+      const formElement = formRef.current.querySelector('form') as HTMLFormElement;
+      if (formElement) {
+        const resetEvent = new Event('reset', { bubbles: true });
+        formElement.dispatchEvent(resetEvent);
+      }
     }
+    toast({
+      title: "リセット完了",
+      description: "フォームを初期状態に戻しました。",
+    });
   };
 
   const handleHistorySelect = (entry: HistoryEntry) => {
@@ -165,6 +190,123 @@ const Index = () => {
     }
   };
 
+  // コピー機能
+  const copyContentToClipboard = async () => {
+    if (!generatedContent) {
+      toast({
+        title: "エラー",
+        description: "コピーする内容がありません。",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      await navigator.clipboard.writeText(generatedContent);
+      toast({
+        title: "コピーしました",
+        description: "本文をクリップボードにコピーしました。",
+      });
+    } catch (error) {
+      toast({
+        title: "エラー",
+        description: "コピーに失敗しました。",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // 文章調整モーダルを開く
+  const openAdjustmentModal = () => {
+    if (!generatedContent) {
+      toast({
+        title: "エラー",
+        description: "調整する文章がありません。",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // TextAdjustmentModalを開くロジック
+    const adjustmentButton = document.querySelector('[data-adjustment-button]') as HTMLButtonElement;
+    if (adjustmentButton) {
+      adjustmentButton.click();
+    }
+  };
+
+  // タブ切り替え
+  const switchToTab = (tabName: string) => {
+    setActiveTab(tabName);
+    const tabButton = document.querySelector(`[value="${tabName}"]`) as HTMLButtonElement;
+    if (tabButton) {
+      tabButton.click();
+    }
+  };
+
+  // フォーム送信（メール生成）
+  const triggerFormSubmit = () => {
+    if (formRef.current) {
+      const event = new Event('submit', { bubbles: true, cancelable: true });
+      formRef.current.dispatchEvent(event);
+    }
+  };
+
+  // ショートカットの定義
+  const shortcuts: ShortcutAction[] = [
+    {
+      key: 'Enter',
+      ctrl: true,
+      action: triggerFormSubmit,
+      description: 'メール生成',
+      disabled: isLoading || isAdjusting
+    },
+    {
+      key: 'Backspace',
+      ctrl: true,
+      action: handleResetMessageTab,
+      description: 'メール情報リセット',
+      disabled: isLoading || isAdjusting
+    },
+    {
+      key: 'c',
+      ctrl: true,
+      shift: true,
+      action: copyContentToClipboard,
+      description: '本文コピー',
+      disabled: !generatedContent
+    },
+    {
+      key: 'e',
+      ctrl: true,
+      action: openAdjustmentModal,
+      description: '文章調整モーダル',
+      disabled: !generatedContent || isAdjusting
+    },
+    {
+      key: '1',
+      ctrl: true,
+      action: () => switchToTab('sender'),
+      description: '送信者設定タブ',
+      disabled: isLoading || isAdjusting
+    },
+    {
+      key: '2',
+      ctrl: true,
+      action: () => switchToTab('message'),
+      description: 'メール情報タブ',
+      disabled: isLoading || isAdjusting
+    },
+    {
+      key: 'h',
+      ctrl: true,
+      action: () => setIsHelpModalOpen(true),
+      description: 'ヘルプ表示'
+    }
+  ];
+
+  // ショートカットキーを有効化
+  useShortcuts(shortcuts);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-6">
       <div className="container px-4 sm:px-6 lg:px-8 max-w-7xl">
@@ -205,9 +347,12 @@ const Index = () => {
           {/* Left column - Input form */}
           <div className="animate-fade-in">
             <EmailReplyForm 
+              ref={formRef}
               onSubmit={handleFormSubmit} 
               isLoading={isLoading} 
               initialData={currentFormData}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
             />
           </div>
           
@@ -216,7 +361,7 @@ const Index = () => {
             <EmailReplyResult
               subject={generatedSubject}
               content={generatedContent}
-              onReset={handleReset}
+              onReset={handleFullReset}
               onEdit={() => {/* 実装なし */}}
               onHistorySelect={handleHistorySelect}
               onTextAdjustment={handleTextAdjustment}
@@ -246,9 +391,25 @@ const Index = () => {
                 />
               </svg>
             </a>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsHelpModalOpen(true)}
+              className="flex items-center gap-1 hover:text-gray-700 transition-colors"
+            >
+              <HelpCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">ショートカット</span>
+            </Button>
             <p>© 2025 AIメールアシスタント</p>
           </div>
         </div>
+        
+        {/* ショートカットヘルプモーダル */}
+        <ShortcutHelpModal 
+          isOpen={isHelpModalOpen}
+          onClose={() => setIsHelpModalOpen(false)}
+          shortcuts={shortcuts}
+        />
       </div>
     </div>
   );
