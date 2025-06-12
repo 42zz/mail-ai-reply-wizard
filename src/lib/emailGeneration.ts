@@ -343,3 +343,173 @@ async function callClaudeAPI(apiKey: string, systemPrompt: string, xmlInput: str
   };
   */
 }
+
+// 文章調整用のリクエスト型
+interface TextAdjustmentRequest {
+  currentText: string;
+  adjustmentInstructions?: string;
+  model?: string;
+  systemPrompt?: string;
+  tone?: number;
+  length?: number;
+}
+
+// 文章調整機能
+export const adjustEmailText = async (
+  request: TextAdjustmentRequest,
+  apiKey: string
+): Promise<EmailGenerationResponse> => {
+  let result: EmailGenerationResponse;
+  try {
+    // APIキーが空の場合はエラーを返す
+    if (!apiKey || apiKey.trim() === "") {
+      result = {
+        content: "APIキーが設定されていません。設定画面から適切なAPIキーを設定してください。",
+        success: false,
+        error: "API_KEY_MISSING"
+      };
+      return result;
+    }
+
+    // トーンと長さの指示を生成
+    const getToneInstruction = (tone?: number) => {
+      if (tone === undefined) return "";
+      if (tone <= 25) return "非常に丁寧で正式なビジネストーンに調整してください。敬語を厳密に使い分け、「いつもお世話になっております」などの定型的な表現を含めてください。";
+      if (tone <= 50) return "丁寧なビジネストーンに調整してください。適切な敬語を使いつつ、親しみやすさも感じられるように修正してください。";
+      if (tone <= 75) return "親しみやすく適度にカジュアルなトーンに調整してください。敬語は使いますが、堅苦しくない表現に変更してください。";
+      return "フレンドリーでカジュアルなトーンに調整してください。「です・ます」調は維持しつつ、「〜ですね」「〜していただけると嬉しいです」など親近感のある表現を使い、絵文字や感嘆符も適度に使用して温かみのある文章にしてください。";
+    };
+
+    const getLengthInstruction = (length?: number) => {
+      if (length === undefined) return "";
+      if (length <= 25) return "より簡潔で要点を絞った内容に調整してください。";
+      if (length <= 50) return "適度な長さで必要な情報を含む内容に調整してください。";
+      if (length <= 75) return "より詳細な説明を含む丁寧な内容に調整してください。";
+      return "非常に詳細で包括的な内容に調整してください。";
+    };
+
+    // 調整指示を作成
+    const adjustmentInstructions = [
+      request.adjustmentInstructions || "以下の文章をより良い日本語のビジネスメールに調整してください。",
+      getToneInstruction(request.tone),
+      getLengthInstruction(request.length)
+    ].filter(Boolean).join("\n");
+
+    const apiEndpoint = "https://api.openai.com/v1/chat/completions";
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`
+    };
+
+    const systemPromptContent = request.systemPrompt || "あなたは日本語のビジネスメール作成の専門家です。与えられた文章を改善し、より適切で読みやすい内容に調整してください。";
+
+    const requestBody: OpenAIChatCompletionRequest = {
+      model: request.model || "gpt-4.1",
+      messages: [
+        {
+          role: "system",
+          content: systemPromptContent
+        },
+        {
+          role: "user",
+          content: `${adjustmentInstructions}\n\n調整対象の文章:\n${request.currentText}\n\n調整された文章は以下のJSON形式で提供してください：\n{\n  "content": "調整された本文"\n}`
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000,
+      response_format: { type: "json_object" }
+    };
+
+    // Call to OpenAI API with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+    try {
+      const response = await fetch(apiEndpoint, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("AI API error:", errorData);
+        
+        if (response.status === 401) {
+          result = {
+            content: "APIキーの認証に失敗しました。設定画面から正しいAPIキーを設定してください。",
+            success: false,
+            error: "INVALID_API_KEY"
+          };
+        } else if (response.status === 429) {
+          result = {
+            content: "APIリクエスト制限に達しました。しばらく時間をおいてから再試行してください。",
+            success: false,
+            error: "RATE_LIMIT_EXCEEDED"
+          };
+        } else {
+          result = { content: `APIエラーが発生しました (${response.status})`, success: false, error: `API_ERROR_${response.status}` };
+        }
+        return result;
+      }
+
+      const data = await response.json();
+      
+      // JSON形式のレスポンスを解析
+      try {
+        const jsonResponse = typeof data.choices[0].message.content === 'string' 
+          ? JSON.parse(data.choices[0].message.content) 
+          : data.choices[0].message.content;
+          
+        if (!jsonResponse.content || jsonResponse.content.trim() === "") {
+          result = {
+            content: "文章の調整に失敗しました。もう一度お試しください。",
+            success: false,
+            error: "EMPTY_RESPONSE"
+          };
+        } else {
+          result = {
+            content: jsonResponse.content || "",
+            success: true
+          };
+        }
+        return result;
+      } catch (error) {
+        console.error("Error parsing adjustment response:", error);
+        result = {
+          content: data.choices[0].message.content || "文章の調整に失敗しました。",
+          success: true
+        };
+        return result;
+      }
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        result = {
+          content: "リクエストがタイムアウトしました。ネットワーク接続を確認して、もう一度お試しください。",
+          success: false,
+          error: "TIMEOUT"
+        };
+      } else {
+        console.error("Text adjustment error:", error);
+        result = {
+          content: "文章調整中に内部エラーが発生しました。",
+          success: false,
+          error: "INTERNAL_ERROR"
+        };
+      }
+      return result;
+    }
+  } catch (error) {
+    console.error("Text adjustment error:", error);
+    result = {
+      content: "文章調整中に予期せぬエラーが発生しました。ネットワーク接続を確認して、もう一度お試しください。",
+      success: false,
+      error: "GENERATION_ERROR"
+    };
+    return result;
+  }
+};

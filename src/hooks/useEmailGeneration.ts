@@ -1,5 +1,5 @@
 import { useSettings } from "@/contexts/SettingsContext";
-import { generateEmailReply } from "@/lib/emailGeneration";
+import { generateEmailReply, adjustEmailText } from "@/lib/emailGeneration";
 
 export interface EmailFormData {
   date: Date;
@@ -50,5 +50,35 @@ export function useEmailGeneration() {
     }
   };
 
-  return { generateEmail };
+  const adjustText = async (currentText: string, tone?: number, length?: number) => {
+    try {
+      const response = await adjustEmailText({
+        currentText,
+        model,
+        systemPrompt,
+        tone,
+        length
+      }, apiKeys.openai);
+
+      if (response.success && !response.content) {
+        console.error("Adjustment API returned success but content is empty");
+        return {
+          content: "文章調整は成功しましたが、内容が空でした。もう一度お試しください。",
+          success: false,
+          error: "EMPTY_CONTENT"
+        };
+      }
+
+      return response;
+    } catch (error) {
+      console.error("Error in text adjustment:", error);
+      return {
+        content: "文章調整中にエラーが発生しました。ネットワーク接続を確認して、もう一度お試しください。",
+        success: false,
+        error: "ADJUSTMENT_ERROR"
+      };
+    }
+  };
+
+  return { generateEmail, adjustText };
 }

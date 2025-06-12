@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, RefreshCcw, Check, AlertTriangle, History, Clock, Trash2, X } from "lucide-react";
+import { Copy, RefreshCcw, Check, AlertTriangle, History, Clock, Trash2, X, Wand2, Loader2 } from "lucide-react";
 import { HistoryEntry } from "@/types";
 import {
   DropdownMenu,
@@ -18,11 +18,12 @@ interface EmailReplyResultProps {
   subject?: string;
   content: string;
   onReset: () => void;
-  onEdit: () => void;
+  onAdjust: (currentText: string) => void;
   onHistorySelect: (entry: HistoryEntry) => void;
+  isLoading?: boolean;
 }
 
-const EmailReplyResult = ({ subject, content, onReset, onHistorySelect }: EmailReplyResultProps) => {
+const EmailReplyResult = ({ subject, content, onReset, onAdjust, onHistorySelect, isLoading }: EmailReplyResultProps) => {
   const { toast } = useToast();
   const [isSubjectCopied, setIsSubjectCopied] = useState(false);
   const [isContentCopied, setIsContentCopied] = useState(false);
@@ -222,10 +223,15 @@ const EmailReplyResult = ({ subject, content, onReset, onHistorySelect }: EmailR
             <Button
               variant="outline"
               className="flex-1"
-              onClick={onReset}
+              onClick={() => onAdjust(editableContent)}
+              disabled={isLoading || !editableContent.trim()}
             >
-              <RefreshCcw className="h-4 w-4 mr-2" />
-              新規作成
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Wand2 className="h-4 w-4 mr-2" />
+              )}
+              {isLoading ? "調整中..." : "文章調整"}
             </Button>
             <Button
               variant="default"
