@@ -5,7 +5,7 @@ interface EmailGenerationRequest {
   signatures: string;
   sender_name: string;
   recipient_name?: string;
-  received_message: string;
+  received_message?: string; // Make optional for new email creation
   response_outline: string;
   model?: string;
   systemPrompt?: string;
@@ -110,8 +110,23 @@ export const generateEmailReply = async (
       return "非常に詳細で包括的な返信にしてください。";
     };
 
+    // Determine if this is a new email or reply based on received_message
+    const isNewEmail = !formData.received_message || formData.received_message.trim() === "";
+    
     // Create XML formatted input - updated to match the new system prompt format
-    const xmlInput = `
+    const xmlInput = isNewEmail ? `
+<input>
+  <current_date>${date}</current_date>
+  <signatures>${formData.signatures}</signatures>
+  <sender_name>${formData.sender_name}</sender_name>
+  <email_content_outline>${formData.response_outline}</email_content_outline>
+</input>
+
+<style_adjustments>
+${getToneInstruction(formData.tone)}
+${getLengthInstruction(formData.length)}
+</style_adjustments>
+` : `
 <input>
   <current_date>${date}</current_date>
   <signatures>${formData.signatures}</signatures>
@@ -135,6 +150,14 @@ ${getLengthInstruction(formData.length)}
 
     // Construct system prompt including style examples if they exist
     let systemPromptContent = formData.systemPrompt || "You are a professional business email writer who specializes in Japanese business correspondence.";
+    
+    // Add specific instructions based on email type
+    if (isNewEmail) {
+      systemPromptContent += "\n\n新規メール作成タスク: 提供されたメール内容の概要に基づいて、適切なビジネスメールを作成してください。件名と本文の両方を生成してください。";
+    } else {
+      systemPromptContent += "\n\nメール返信タスク: 受信したメッセージと返信概要に基づいて、適切なビジネスメール返信を作成してください。";
+    }
+    
     if (formData.style_examples && formData.style_examples.length > 0) {
       systemPromptContent += "\n\nFollow these style examples:\n";
       formData.style_examples.forEach((example, index) => {
@@ -156,7 +179,7 @@ ${getLengthInstruction(formData.length)}
         },
         {
           role: "user",
-          content: `${xmlInput}\n\n返信内容は以下のJSON形式で提供してください：\n{\n  "subject": "件名",\n  "content": "本文"\n}`
+          content: `${xmlInput}\n\n${isNewEmail ? 'メール内容' : '返信内容'}は以下のJSON形式で提供してください：\n{\n  "subject": "件名",\n  "content": "本文"\n}`
         }
       ],
       temperature: 0.7,
