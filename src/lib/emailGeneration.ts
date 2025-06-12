@@ -5,7 +5,7 @@ interface EmailGenerationRequest {
   signatures: string;
   sender_name: string;
   recipient_name?: string;
-  received_message: string;
+  received_message?: string; // Make optional for new email creation
   response_outline: string;
   model?: string;
   systemPrompt?: string;
@@ -110,8 +110,23 @@ export const generateEmailReply = async (
       return "非常に詳細で包括的な返信にしてください。";
     };
 
+    // Determine if this is a new email or reply based on received_message
+    const isNewEmail = !formData.received_message || formData.received_message.trim() === "";
+    
     // Create XML formatted input - updated to match the new system prompt format
-    const xmlInput = `
+    const xmlInput = isNewEmail ? `
+<input>
+  <current_date>${date}</current_date>
+  <signatures>${formData.signatures}</signatures>
+  <sender_name>${formData.sender_name}</sender_name>
+  <email_content_outline>${formData.response_outline}</email_content_outline>
+</input>
+
+<style_adjustments>
+${getToneInstruction(formData.tone)}
+${getLengthInstruction(formData.length)}
+</style_adjustments>
+` : `
 <input>
   <current_date>${date}</current_date>
   <signatures>${formData.signatures}</signatures>

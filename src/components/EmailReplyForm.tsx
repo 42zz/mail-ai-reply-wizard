@@ -27,7 +27,7 @@ export interface EmailFormData {
   date: Date;
   senderName: string;
   signature?: string; // Make signature optional
-  receivedMessage: string;
+  receivedMessage?: string; // Make receivedMessage optional for new email creation
   responseOutline: string;
   // Advanced adjustment options
   tone?: number; // 0-100: 0=formal, 100=casual
@@ -111,12 +111,8 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
     let shouldSwitchToMessageTab = false;
 
     if (!senderName.trim()) newErrors.push("送信者名を入力してください");
-    if (!receivedMessage.trim()) {
-      newErrors.push("受信メッセージ内容を入力してください");
-      shouldSwitchToMessageTab = true;
-    }
     if (!responseOutline.trim()) {
-      newErrors.push("返信内容の概要を入力してください");
+      newErrors.push("メール内容の概要を入力してください");
       shouldSwitchToMessageTab = true;
     }
 
@@ -147,7 +143,7 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
       date,
       senderName,
       signature: signature.trim() ? signature : undefined, // Only include signature if it's not empty
-      receivedMessage,
+      receivedMessage: receivedMessage.trim() ? receivedMessage : undefined,
       responseOutline,
       tone,
       length,
@@ -239,7 +235,7 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
 
                 <AccordionItem value="adjustment">
                   <AccordionTrigger className="text-sm font-medium">
-                    返信スタイル調整
+                    メールスタイル調整
                   </AccordionTrigger>
                   <AccordionContent>
                     <AdjustmentSection
@@ -314,7 +310,7 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
               <div className="space-y-6">
                 <div className="bg-blue-50 border-l-4 border-blue-500 p-3 flex items-center space-x-2 text-sm text-blue-700">
                   <Info className="h-5 w-5 flex-shrink-0" />
-                  <p>受信メッセージと返信概要を入力してください。両方の情報を基に、AIが適切な返信を作成します。</p>
+                  <p>新規メール作成の場合は返信概要のみ、返信メールの場合は受信メッセージと返信概要を入力してください。</p>
                 </div>
 
                 <div className="space-y-4">
@@ -348,7 +344,7 @@ const EmailReplyForm = ({ onSubmit, isLoading, initialData }: EmailReplyFormProp
               ) : (
                 <>
                   <Wand2 className="mr-2 h-4 w-4" />
-                  返信を生成
+                  メール生成
                 </>
               )}
             </Button>

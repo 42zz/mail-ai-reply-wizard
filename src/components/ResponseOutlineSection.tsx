@@ -13,13 +13,13 @@ const ResponseOutlineSection = ({
   return (
     <div className="space-y-2">
       <label htmlFor="response-outline" className="block text-sm font-medium">
-        返信内容の概要
+        メール内容の概要 <span className="text-red-500 text-xs">*必須</span>
       </label>
       <Textarea
         id="response-outline"
         value={responseOutline}
         onChange={(e) => setResponseOutline(e.target.value)}
-        placeholder="返信で伝えたい要点を箇条書きや簡潔な文章で記入してください"
+        placeholder="送信したいメールで伝えたい要点を箇条書きや簡潔な文章で記入してください"
         className="min-h-[150px] w-full"
         autoResize={true}
       />
