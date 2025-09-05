@@ -171,7 +171,7 @@ ${getLengthInstruction(formData.length)}
     // メイン処理ロジック - OpenAI APIを使用
     headers.Authorization = `Bearer ${apiKey}`;
     const requestBody: OpenAIChatCompletionRequest = {
-      model: formData.model || "gpt-4.1",
+      model: formData.model || "gpt-5",
       messages: [
         {
           role: "system",
@@ -355,7 +355,7 @@ ${getLengthInstruction(length)}
     systemPromptContent += "\n\n現在のテキストを調整してください。ユーザーの調整依頼に基づいて、より適切で効果的な文章に改善してください。";
 
     const requestBody: OpenAIChatCompletionRequest = {
-      model: model || "gpt-4o",
+      model: model || "gpt-5",
       messages: [
         {
           role: "system",
@@ -471,7 +471,7 @@ ${getLengthInstruction(length)}
 
 // Claude APIを呼び出す分離関数（現在はCORSの問題で使用されていない）
 async function callClaudeAPI(apiKey: string, systemPrompt: string, xmlInput: string): Promise<EmailGenerationResponse> {
-  // ここでは、実際にClaudeのAPIを呼び出さず、CORSエラーを避けるために直接GPT-4oにフォールバック
+  // ここでは、実際にClaudeのAPIを呼び出さず、CORSエラーを避けるために直接GPT-5にフォールバック
   throw new Error("Claude API currently unavailable due to CORS restrictions");
   
   // 注意: 以下のコードはブラウザからは実行できないため、コメントアウトしています

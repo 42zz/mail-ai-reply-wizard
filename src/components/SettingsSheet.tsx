@@ -202,8 +202,8 @@ const SettingsSheet = () => {
                 <SelectValue placeholder="モデルを選択" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="gpt-5">GPT-5</SelectItem>
                 <SelectItem value="gpt-4.1">GPT-4.1</SelectItem>
-                <SelectItem value="gpt-4.1-mini">GPT-4.1-mini</SelectItem>
                 <SelectItem value="gpt-4o">GPT-4o</SelectItem>
                 <SelectItem value="gpt-4o-mini">GPT-4o-mini</SelectItem>
               </SelectContent>
