@@ -17,16 +17,19 @@ interface EmailGenerationRequest {
 // EmailFormData をインポート (HistoryEntry で使用)
 import { EmailFormData } from "@/components/EmailReplyForm";
 
-// OpenAI APIリクエストボディの型
-interface OpenAIChatCompletionRequest {
+// GPT-5 APIリクエストボディの型
+interface GPT5ChatCompletionRequest {
   model: string;
   messages: {
     role: string;
     content: string;
   }[];
-  temperature: number;
-  max_tokens: number;
+  temperature?: number;
+  max_completion_tokens?: number;
   response_format: { type: string };
+  frequency_penalty?: number;
+  presence_penalty?: number;
+  seed?: number;
 }
 
 // HistoryEntryのrequestの型を修正
@@ -168,10 +171,10 @@ ${getLengthInstruction(formData.length)}
       });
     }
 
-    // メイン処理ロジック - OpenAI APIを使用
+    // メイン処理ロジック - GPT-5 APIを使用
     headers.Authorization = `Bearer ${apiKey}`;
-    const requestBody: OpenAIChatCompletionRequest = {
-      model: formData.model || "gpt-5",
+    const requestBody: GPT5ChatCompletionRequest = {
+      model: formData.model || "gpt-5-mini",
       messages: [
         {
           role: "system",
@@ -182,14 +185,16 @@ ${getLengthInstruction(formData.length)}
           content: `${xmlInput}\n\n${isNewEmail ? 'メール内容' : '返信内容'}は以下のJSON形式で提供してください：\n{\n  "subject": "件名",\n  "content": "本文"\n}`
         }
       ],
-      temperature: 0.7,
-      max_tokens: 1000,
-      response_format: { type: "json_object" }
+      max_completion_tokens: 4000,
+      response_format: { type: "json_object" },
+      frequency_penalty: 0.0,
+      presence_penalty: 0.0,
+      seed: Math.floor(Math.random() * 1000000)
     };
 
     // Call to OpenAI API with timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒タイムアウト
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120秒タイムアウト
 
     try {
       const response = await fetch(apiEndpoint, {
@@ -203,24 +208,10 @@ ${getLengthInstruction(formData.length)}
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("AI API error:", errorData);
+        console.error("GPT-5 API error:", errorData);
         
-        // APIエラーの種類に基づいたメッセージを返す
-        if (response.status === 401) {
-          result = {
-            content: "APIキーの認証に失敗しました。設定画面から正しいAPIキーを設定してください。",
-            success: false,
-            error: "INVALID_API_KEY"
-          };
-        } else if (response.status === 429) {
-          result = {
-            content: "APIリクエスト制限に達しました。しばらく時間をおいてから再試行してください。",
-            success: false,
-            error: "RATE_LIMIT_EXCEEDED"
-          };
-        } else {
-           result = { content: `APIエラーが発生しました (${response.status})`, success: false, error: `API_ERROR_${response.status}` };
-        }
+        // GPT-5専用のエラーハンドリングを使用
+        result = handleGPT5Error(response, errorData);
 
         saveHistory(formData, result); // 失敗履歴も保存
         return result;
@@ -354,8 +345,8 @@ ${getLengthInstruction(length)}
     let systemPromptContent = systemPrompt || "You are a professional business email writer who specializes in Japanese business correspondence.";
     systemPromptContent += "\n\n現在のテキストを調整してください。ユーザーの調整依頼に基づいて、より適切で効果的な文章に改善してください。";
 
-    const requestBody: OpenAIChatCompletionRequest = {
-      model: model || "gpt-5",
+    const requestBody: GPT5ChatCompletionRequest = {
+      model: model || "gpt-5-mini",
       messages: [
         {
           role: "system",
@@ -366,14 +357,16 @@ ${getLengthInstruction(length)}
           content: `${xmlInput}\n\n調整された文章は以下のJSON形式で提供してください：\n{\n  "subject": "件名（変更がある場合のみ）",\n  "content": "調整された本文"\n}`
         }
       ],
-      temperature: 0.7,
-      max_tokens: 1000,
-      response_format: { type: "json_object" }
+      max_completion_tokens: 4000,
+      response_format: { type: "json_object" },
+      frequency_penalty: 0.0,
+      presence_penalty: 0.0,
+      seed: Math.floor(Math.random() * 1000000)
     };
 
     // Call to OpenAI API with timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒タイムアウト
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120秒タイムアウト
 
     try {
       const response = await fetch(apiEndpoint, {
@@ -387,24 +380,10 @@ ${getLengthInstruction(length)}
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("AI API error:", errorData);
+        console.error("GPT-5 API error:", errorData);
         
-        // APIエラーの種類に基づいたメッセージを返す
-        if (response.status === 401) {
-          result = {
-            content: "APIキーの認証に失敗しました。設定画面から正しいAPIキーを設定してください。",
-            success: false,
-            error: "INVALID_API_KEY"
-          };
-        } else if (response.status === 429) {
-          result = {
-            content: "APIリクエスト制限に達しました。しばらく時間をおいてから再試行してください。",
-            success: false,
-            error: "RATE_LIMIT_EXCEEDED"
-          };
-        } else {
-           result = { content: `APIエラーが発生しました (${response.status})`, success: false, error: `API_ERROR_${response.status}` };
-        }
+        // GPT-5専用のエラーハンドリングを使用
+        result = handleGPT5Error(response, errorData);
         return result;
       }
 
@@ -469,77 +448,36 @@ ${getLengthInstruction(length)}
   }
 };
 
-// Claude APIを呼び出す分離関数（現在はCORSの問題で使用されていない）
-async function callClaudeAPI(apiKey: string, systemPrompt: string, xmlInput: string): Promise<EmailGenerationResponse> {
-  // ここでは、実際にClaudeのAPIを呼び出さず、CORSエラーを避けるために直接GPT-5にフォールバック
-  throw new Error("Claude API currently unavailable due to CORS restrictions");
-  
-  // 注意: 以下のコードはブラウザからは実行できないため、コメントアウトしています
-  /*
-  const apiEndpoint = "https://api.anthropic.com/v1/messages";
-  const headers = {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${apiKey}`,
-    "anthropic-version": "2023-06-01"
-  };
-  
-  const requestBody = {
-    model: "claude-3-haiku-20240307",
-    system: systemPrompt || "You are a professional business email writer who specializes in Japanese business correspondence.",
-    messages: [
-      {
-        role: "user",
-        content: `${xmlInput}\n\n返信内容は以下の形式で提供してください：\n<output>\n  <subject>件名（必要な場合のみ）</subject>\n  <content>メール本文</content>\n</output>`
-      }
-    ],
-    max_tokens: 1000,
-    temperature: 0.7
-  };
-  
-  const response = await fetch(apiEndpoint, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(requestBody),
-  });
-  
-  if (!response.ok) {
-    throw new Error(`Claude API error: ${response.status}`);
+// GPT-5専用のエラーハンドリング関数
+function handleGPT5Error(response: Response, errorData: { error?: { code?: string } }): EmailGenerationResponse {
+  // GPT-5固有のエラーコードに対応
+  if (response.status === 400 && errorData.error?.code === 'invalid_model') {
+    return {
+      content: "GPT-5モデルが利用できません。OpenAIの最新のAPIキーを使用してください。",
+      success: false,
+      error: "INVALID_MODEL"
+    };
   }
   
-  const data = await response.json();
-  const aiResponse = data.content[0].text;
+  if (response.status === 429 && errorData.error?.code === 'rate_limit_exceeded') {
+    return {
+      content: "GPT-5のレート制限に達しました。しばらく時間をおいてから再試行してください。",
+      success: false,
+      error: "RATE_LIMIT_EXCEEDED"
+    };
+  }
   
-  // Parse XML output format
-  let subject = "";
-  let content = "";
-  
-  if (aiResponse.includes("<output>") && aiResponse.includes("</output>")) {
-    // Extract subject if available
-    if (aiResponse.includes("<subject>") && aiResponse.includes("</subject>")) {
-      const subjectMatch = aiResponse.match(/<subject>([\s\S]*?)<\/subject>/);
-      if (subjectMatch && subjectMatch[1]) {
-        subject = subjectMatch[1].trim();
-      }
-    }
-    
-    // Extract content
-    const contentMatch = aiResponse.match(/<content>([\s\S]*?)<\/content>/);
-    if (contentMatch && contentMatch[1]) {
-      content = contentMatch[1].trim();
-    } else {
-      // Fallback if content tag is not found
-      content = aiResponse;
-    }
-  } else {
-    // Fallback
-    subject = "ご連絡いただきありがとうございます";
-    content = aiResponse;
+  if (response.status === 401) {
+    return {
+      content: "GPT-5のAPIキーの認証に失敗しました。設定画面から正しいAPIキーを設定してください。",
+      success: false,
+      error: "INVALID_API_KEY"
+    };
   }
   
   return {
-    subject,
-    content,
-    success: true
+    content: `GPT-5 APIエラーが発生しました (${response.status})`,
+    success: false,
+    error: `GPT5_API_ERROR_${response.status}`
   };
-  */
 }

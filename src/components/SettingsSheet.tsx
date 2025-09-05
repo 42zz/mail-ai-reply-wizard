@@ -203,9 +203,7 @@ const SettingsSheet = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="gpt-5">GPT-5</SelectItem>
-                <SelectItem value="gpt-4.1">GPT-4.1</SelectItem>
-                <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                <SelectItem value="gpt-4o-mini">GPT-4o-mini</SelectItem>
+                <SelectItem value="gpt-5-mini">GPT-5-mini</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
