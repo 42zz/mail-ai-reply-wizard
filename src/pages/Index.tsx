@@ -366,6 +366,7 @@ const Index = () => {
               onHistorySelect={handleHistorySelect}
               onTextAdjustment={handleTextAdjustment}
               isAdjusting={isAdjusting}
+              mode={currentFormData?.mode || "email"}
             />
           </div>
         </div>

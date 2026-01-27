@@ -25,15 +25,17 @@ interface EmailReplyResultProps {
   onHistorySelect: (entry: HistoryEntry) => void;
   onTextAdjustment: (customPrompt: string) => void;
   isAdjusting: boolean;
+  mode?: "email" | "message"; // Add mode prop
 }
 
-const EmailReplyResult = ({ 
-  subject, 
-  content, 
-  onReset, 
-  onHistorySelect, 
-  onTextAdjustment, 
-  isAdjusting 
+const EmailReplyResult = ({
+  subject,
+  content,
+  onReset,
+  onHistorySelect,
+  onTextAdjustment,
+  isAdjusting,
+  mode = "email"
 }: EmailReplyResultProps) => {
   const { toast } = useToast();
   const [isSubjectCopied, setIsSubjectCopied] = useState(false);
@@ -122,7 +124,9 @@ const EmailReplyResult = ({
     return (
       <Card className="w-full h-full">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-xl">生成されたメール</CardTitle>
+          <CardTitle className="text-xl">
+            {mode === "message" ? "生成されたメッセージ" : "生成されたメール"}
+          </CardTitle>
           {history.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -145,7 +149,9 @@ const EmailReplyResult = ({
                       <Clock className="mr-2 h-4 w-4 flex-shrink-0" />
                       <span className="mr-2 flex-shrink-0">{formatHistoryTimestamp(entry.timestamp)}</span>
                       <span className="truncate text-gray-600">
-                        {entry.response.subject || "(件名なし)"}
+                        {mode === "message"
+                          ? (entry.response.content?.substring(0, 30) + "...") || "(メッセージなし)"
+                          : (entry.response.subject || "(件名なし)")}
                       </span>
                     </div>
                     <Button
@@ -166,14 +172,16 @@ const EmailReplyResult = ({
           )}
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label htmlFor="subject" className="block text-sm font-medium">
-                件名
-              </label>
+          {mode !== "message" && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label htmlFor="subject" className="block text-sm font-medium">
+                  件名
+                </label>
+              </div>
+              <Input id="subject" placeholder="件名がここに表示されます" readOnly className="w-full" />
             </div>
-            <Input id="subject" placeholder="件名がここに表示されます" readOnly className="w-full" />
-          </div>
+          )}
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -183,7 +191,11 @@ const EmailReplyResult = ({
             </div>
             <Textarea
               id="content"
-              placeholder="左側で情報を入力して「メール生成」ボタンを押すと、AIが生成したメール本文がここに表示されます"
+              placeholder={
+                mode === "message"
+                  ? "左側で情報を入力して「生成」ボタンを押すと、AIが生成したメッセージ本文がここに表示されます"
+                  : "左側で情報を入力して「メール生成」ボタンを押すと、AIが生成したメール本文がここに表示されます"
+              }
               readOnly
               className="min-h-[300px] w-full font-mono text-sm"
             />
@@ -208,7 +220,9 @@ const EmailReplyResult = ({
     <div className="w-full h-full">
       <Card className="w-full h-full">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-xl">生成されたメール返信</CardTitle>
+          <CardTitle className="text-xl">
+            {mode === "message" ? "生成されたメッセージ返信" : "生成されたメール返信"}
+          </CardTitle>
           {history.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -231,7 +245,9 @@ const EmailReplyResult = ({
                       <Clock className="mr-2 h-4 w-4 flex-shrink-0" />
                       <span className="mr-2 flex-shrink-0">{formatHistoryTimestamp(entry.timestamp)}</span>
                       <span className="truncate text-gray-600">
-                        {entry.response.subject || "(件名なし)"}
+                        {mode === "message"
+                          ? (entry.response.content?.substring(0, 30) + "...") || "(メッセージなし)"
+                          : (entry.response.subject || "(件名なし)")}
                       </span>
                     </div>
                     <Button
@@ -252,7 +268,7 @@ const EmailReplyResult = ({
           )}
         </CardHeader>
         <CardContent className="space-y-6">
-          {subject !== undefined && (
+          {mode !== "message" && subject !== undefined && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label htmlFor="subject" className="block text-sm font-medium">
