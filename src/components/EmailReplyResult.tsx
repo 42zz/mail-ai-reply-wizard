@@ -150,7 +150,7 @@ const EmailReplyResult = ({
                       <span className="mr-2 flex-shrink-0">{formatHistoryTimestamp(entry.timestamp)}</span>
                       <span className="truncate text-gray-600">
                         {mode === "message"
-                          ? (entry.response.content?.substring(0, 30) + "...") || "(メッセージなし)"
+                          ? (entry.response.content ? entry.response.content.substring(0, 30) + "..." : "(メッセージなし)")
                           : (entry.response.subject || "(件名なし)")}
                       </span>
                     </div>
@@ -246,7 +246,7 @@ const EmailReplyResult = ({
                       <span className="mr-2 flex-shrink-0">{formatHistoryTimestamp(entry.timestamp)}</span>
                       <span className="truncate text-gray-600">
                         {mode === "message"
-                          ? (entry.response.content?.substring(0, 30) + "...") || "(メッセージなし)"
+                          ? (entry.response.content ? entry.response.content.substring(0, 30) + "..." : "(メッセージなし)")
                           : (entry.response.subject || "(件名なし)")}
                       </span>
                     </div>

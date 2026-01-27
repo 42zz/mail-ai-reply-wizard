@@ -160,7 +160,9 @@ ${getLengthInstruction(formData.length)}
 
     // Add specific instructions based on mode
     if (isMessageMode) {
-      systemPromptContent += "\n\nチャットメッセージ返信タスク: 受信したチャットメッセージと返信概要に基づいて、SlackやChatworkなどのチャットツールに適した返信メッセージを作成してください。件名は不要で、本文のみを生成してください。自然で読みやすく、チームコミュニケーションに適したトーンで書いてください。";
+      systemPromptContent += isNewEmail
+        ? "\n\n新規メッセージ作成タスク: 返信概要に基づいて、SlackやChatworkなどのチャットツールに適したメッセージを作成してください。件名は不要で、本文のみを生成してください。自然で読みやすく、チームコミュニケーションに適したトーンで書いてください。"
+        : "\n\nチャットメッセージ返信タスク: 受信したチャットメッセージと返信概要に基づいて、SlackやChatworkなどのチャットツールに適した返信メッセージを作成してください。件名は不要で、本文のみを生成してください。自然で読みやすく、チームコミュニケーションに適したトーンで書いてください。";
     } else if (isNewEmail) {
       systemPromptContent += "\n\n新規メール作成タスク: 提供されたメール内容の概要に基づいて、適切なビジネスメールを作成してください。件名と本文の両方を生成してください。";
     } else {
