@@ -9,6 +9,7 @@ export interface EmailFormData {
   responseOutline: string;
   tone?: number; // 0-100: 0=formal, 100=casual
   length?: number; // 0-100: 0=concise, 100=detailed
+  mode?: "email" | "message"; // Add mode for chat/message support
 }
 
 export function useEmailGeneration() {
@@ -27,6 +28,7 @@ export function useEmailGeneration() {
         style_examples: styleExamples,
         tone: formData.tone,
         length: formData.length,
+        mode: formData.mode || "email", // Pass mode to email generation
       }, apiKeys.openai);
 
       // Add additional validation to ensure content exists

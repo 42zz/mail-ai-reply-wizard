@@ -8,7 +8,8 @@ import MessageSection from "./MessageSection";
 import ResponseOutlineSection from "./ResponseOutlineSection";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, User, MessageSquare, Trash2, Info, Wand2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Loader2, User, MessageSquare, Trash2, Info, Wand2, Mail } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getShortcutText } from "@/lib/platform";
 import AdjustmentSection from "./AdjustmentSection";
@@ -36,6 +37,7 @@ export interface EmailFormData {
   // Advanced adjustment options
   tone?: number; // 0-100: 0=formal, 100=casual
   length?: number; // 0-100: 0=concise, 100=detailed
+  mode?: "email" | "message"; // Add mode for chat/message support
 }
 
 interface EmailReplyFormRef extends HTMLFormElement {
@@ -57,6 +59,7 @@ const EmailReplyForm = forwardRef<EmailReplyFormRef, EmailReplyFormProps>(({
   const [responseOutline, setResponseOutline] = useState(initialData?.responseOutline || "");
   const [tone, setTone] = useState(initialData?.tone !== undefined ? initialData.tone : 25); // Default to formal/polite
   const [length, setLength] = useState(initialData?.length !== undefined ? initialData.length : 50); // Default to standard length
+  const [mode, setMode] = useState<"email" | "message">(initialData?.mode || "email"); // Add mode state
   const [errors, setErrors] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState(externalActiveTab || "sender");
   const [showErrors, setShowErrors] = useState(false);
@@ -70,16 +73,19 @@ const EmailReplyForm = forwardRef<EmailReplyFormRef, EmailReplyFormProps>(({
       setResponseOutline(initialData.responseOutline);
       setTone(initialData.tone !== undefined ? initialData.tone : 25);
       setLength(initialData.length !== undefined ? initialData.length : 50);
+      setMode(initialData.mode || "email");
     } else {
       const savedSenderName = localStorage.getItem('senderName');
       const savedSignature = localStorage.getItem('signature');
       const savedTone = localStorage.getItem('tone');
       const savedLength = localStorage.getItem('length');
+      const savedMode = localStorage.getItem('mode') as "email" | "message" | null;
 
       if (savedSenderName) setSenderName(savedSenderName);
       if (savedSignature) setSignature(savedSignature);
       if (savedTone !== null) setTone(parseInt(savedTone));
       if (savedLength !== null) setLength(parseInt(savedLength));
+      if (savedMode) setMode(savedMode);
     }
   }, [initialData]);
 
@@ -95,6 +101,7 @@ const EmailReplyForm = forwardRef<EmailReplyFormRef, EmailReplyFormProps>(({
       setErrors([]);
       setShowErrors(false);
       setActiveTab("sender");
+      setMode("email"); // Reset to email mode
     };
 
     const formElement = document.querySelector('form');
@@ -118,7 +125,8 @@ const EmailReplyForm = forwardRef<EmailReplyFormRef, EmailReplyFormProps>(({
   useEffect(() => {
     localStorage.setItem('tone', tone.toString());
     localStorage.setItem('length', length.toString());
-  }, [tone, length]);
+    localStorage.setItem('mode', mode);
+  }, [tone, length, mode]);
 
   const validateForm = (): boolean => {
     const newErrors: string[] = [];
@@ -126,17 +134,17 @@ const EmailReplyForm = forwardRef<EmailReplyFormRef, EmailReplyFormProps>(({
 
     if (!senderName.trim()) newErrors.push("送信者名を入力してください");
     if (!responseOutline.trim()) {
-      newErrors.push("メール内容の概要を入力してください");
+      newErrors.push(mode === "message" ? "メッセージ内容の概要を入力してください" : "メール内容の概要を入力してください");
       shouldSwitchToMessageTab = true;
     }
 
     setErrors(newErrors);
-    
+
     // メール情報タブの項目でエラーがある場合、そのタブに遷移
     if (shouldSwitchToMessageTab && newErrors.length > 0) {
       setActiveTab("message");
     }
-    
+
     return newErrors.length === 0;
   };
 
@@ -161,6 +169,7 @@ const EmailReplyForm = forwardRef<EmailReplyFormRef, EmailReplyFormProps>(({
       responseOutline,
       tone,
       length,
+      mode,
     };
 
     onSubmit(formData);
@@ -247,7 +256,7 @@ const EmailReplyForm = forwardRef<EmailReplyFormRef, EmailReplyFormProps>(({
               </TabsTrigger>
               <TabsTrigger value="message" className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
-                <span className="hidden sm:inline">メール情報</span>
+                <span className="hidden sm:inline">{mode === "message" ? "メッセージ情報" : "メール情報"}</span>
               </TabsTrigger>
             </TabsList>
 
@@ -304,6 +313,40 @@ const EmailReplyForm = forwardRef<EmailReplyFormRef, EmailReplyFormProps>(({
                   </AccordionContent>
                 </AccordionItem>
 
+                <AccordionItem value="mode">
+                  <AccordionTrigger className="text-sm font-medium">
+                    出力モード設定
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Mail className="h-5 w-5 text-gray-600" />
+                          <div>
+                            <p className="text-sm font-medium">モード切り替え</p>
+                            <p className="text-xs text-gray-500">チャットメッセージ or ビジネスメール</p>
+                          </div>
+                        </div>
+                        <Switch
+                          checked={mode === "message"}
+                          onCheckedChange={(checked) => setMode(checked ? "message" : "email")}
+                        />
+                      </div>
+                      <div className="flex items-start gap-2 text-xs text-gray-500">
+                        <Info className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className={mode === "message" ? "font-medium text-blue-600" : ""}>
+                            チャットモード: SlackやChatwork向け（件名なし）
+                          </p>
+                          <p className={mode === "email" ? "font-medium text-blue-600" : ""}>
+                            メールモード: ビジネスメール向け（件名あり）
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
                 <AccordionItem value="style">
                   <AccordionTrigger className="text-sm font-medium">
                     文面例
@@ -353,7 +396,11 @@ const EmailReplyForm = forwardRef<EmailReplyFormRef, EmailReplyFormProps>(({
               <div className="space-y-6">
                 <div className="bg-blue-50 border-l-4 border-blue-500 p-3 flex items-center space-x-2 text-sm text-blue-700">
                   <Info className="h-5 w-5 flex-shrink-0" />
-                  <p>新規メール作成の場合は返信概要のみ、返信メールの場合は受信メッセージと返信概要を入力してください。</p>
+                  <p>
+                    {mode === "message"
+                      ? "新規メッセージ作成の場合は返信概要のみ、返信メッセージの場合は受信メッセージと返信概要を入力してください。"
+                      : "新規メール作成の場合は返信概要のみ、返信メールの場合は受信メッセージと返信概要を入力してください。"}
+                  </p>
                 </div>
 
                 <div className="space-y-4">
