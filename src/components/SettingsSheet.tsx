@@ -37,22 +37,14 @@ const SettingsSheet = () => {
   const AI_MODELS = {
     openai: [
       { id: "gpt-5.2-chat-latest", name: "GPT-5.2 Instant (最新)" },
-      { id: "gpt-4.1", name: "GPT-4.1" },
-      { id: "gpt-4o", name: "GPT-4o" },
-      { id: "gpt-4o-mini", name: "GPT-4o Mini" },
-      { id: "o3-mini", name: "o3-mini" },
     ],
     gemini: [
       { id: "gemini-3-flash-preview", name: "Gemini 3 Flash" },
       { id: "gemini-3-pro", name: "Gemini 3 Pro" },
-      { id: "gemini-2.0-flash-thinking-exp-01-21", name: "Gemini 2.0 Flash Thinking" },
-      { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash" },
     ],
     anthropic: [
       { id: "claude-sonnet-4-5-20250929", name: "Claude Sonnet 4.5" },
       { id: "claude-haiku-4-5-20251001", name: "Claude Haiku 4.5" },
-      { id: "claude-3-7-sonnet", name: "Claude 3.7 Sonnet" },
-      { id: "claude-3-5-haiku", name: "Claude 3.5 Haiku" },
     ],
   };
 
