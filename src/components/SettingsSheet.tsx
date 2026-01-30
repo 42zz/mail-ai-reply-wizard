@@ -14,6 +14,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectGroup,
+  SelectLabel,
+  SelectSeparator,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -29,6 +32,46 @@ const SettingsSheet = () => {
     useSettings();
   const [showApiKeys, setShowApiKeys] = useState(false);
   const { toast } = useToast();
+
+  // AIモデルの定義
+  const AI_MODELS = {
+    openai: [
+      { id: "gpt-5.2", name: "GPT-5.2 (最新)" },
+      { id: "gpt-5.2-pro", name: "GPT-5.2 Pro" },
+      { id: "gpt-5.2-chat-latest", name: "GPT-5.2 Instant" },
+      { id: "gpt-5.2-codex", name: "GPT-5.2-Codex (コーディング)" },
+      { id: "gpt-4.1", name: "GPT-4.1" },
+      { id: "gpt-4o", name: "GPT-4o" },
+      { id: "gpt-4o-mini", name: "GPT-4o Mini" },
+      { id: "o3-mini", name: "o3-mini" },
+    ],
+    gemini: [
+      { id: "gemini-3-flash-preview", name: "Gemini 3 Flash" },
+      { id: "gemini-3-pro", name: "Gemini 3 Pro" },
+      { id: "gemini-3-deep-think-preview", name: "Gemini 3 Deep Think" },
+      { id: "gemini-2.0-flash-thinking-exp-01-21", name: "Gemini 2.0 Flash Thinking" },
+      { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro" },
+      { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash" },
+    ],
+    anthropic: [
+      { id: "claude-opus-4-5-20251101", name: "Claude Opus 4.5 (最新)" },
+      { id: "claude-sonnet-4-5-20250929", name: "Claude Sonnet 4.5" },
+      { id: "claude-haiku-4-5-20251001", name: "Claude Haiku 4.5" },
+      { id: "claude-3-7-sonnet", name: "Claude 3.7 Sonnet" },
+      { id: "claude-3-5-sonnet", name: "Claude 3.5 Sonnet" },
+      { id: "claude-3-5-haiku", name: "Claude 3.5 Haiku" },
+    ],
+  };
+
+  // 選択中のモデルからプロバイダーを判定
+  const getCurrentProvider = (modelId: string): 'openai' | 'gemini' | 'anthropic' => {
+    if (modelId.startsWith('gpt') || modelId.startsWith('o3')) return 'openai';
+    if (modelId.startsWith('gemini')) return 'gemini';
+    if (modelId.startsWith('claude')) return 'anthropic';
+    return 'openai'; // デフォルト
+  };
+
+  const currentProvider = getCurrentProvider(model);
 
   // デフォルトのシステムプロンプト
   const defaultSystemPrompt = `あなたはプロフェッショナルなメール返信支援AIです。以下のXML形式で提供される情報に基づいて、丁寧で適切なメール返信を作成してください。
@@ -69,8 +112,17 @@ const SettingsSheet = () => {
   };
 
   // APIプロバイダーのドキュメントへのリンク
-  const getApiDocLink = () => {
-    return "https://platform.openai.com/api-keys";
+  const getApiDocLink = (provider: string) => {
+    switch (provider) {
+      case 'openai':
+        return "https://platform.openai.com/api-keys";
+      case 'gemini':
+        return "https://makersuite.google.com/app/apikey";
+      case 'anthropic':
+        return "https://console.anthropic.com/settings/keys";
+      default:
+        return "https://platform.openai.com/api-keys";
+    }
   };
 
   // 設定をエクスポートする関数
@@ -140,6 +192,12 @@ const SettingsSheet = () => {
           if (settings.apiKeys.openai && typeof settings.apiKeys.openai === 'string') {
             setApiKey('openai', settings.apiKeys.openai);
           }
+          if (settings.apiKeys.gemini && typeof settings.apiKeys.gemini === 'string') {
+            setApiKey('gemini', settings.apiKeys.gemini);
+          }
+          if (settings.apiKeys.anthropic && typeof settings.apiKeys.anthropic === 'string') {
+            setApiKey('anthropic', settings.apiKeys.anthropic);
+          }
         }
         
         // signatureTemplatesとstyleExamplesはlocalStorageに直接設定
@@ -202,8 +260,32 @@ const SettingsSheet = () => {
                 <SelectValue placeholder="モデルを選択" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="gpt-5">GPT-5</SelectItem>
-                <SelectItem value="gpt-5-mini">GPT-5-mini</SelectItem>
+                <SelectGroup>
+                  <SelectLabel className="font-semibold">OpenAI</SelectLabel>
+                  {AI_MODELS.openai.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+                <SelectSeparator />
+                <SelectGroup>
+                  <SelectLabel className="font-semibold">Google Gemini</SelectLabel>
+                  {AI_MODELS.gemini.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+                <SelectSeparator />
+                <SelectGroup>
+                  <SelectLabel className="font-semibold">Anthropic Claude</SelectLabel>
+                  {AI_MODELS.anthropic.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
@@ -216,11 +298,14 @@ const SettingsSheet = () => {
               <Label>APIキー設定</Label>
               <div className="flex space-x-2">
                 <a
-                  href={getApiDocLink()}
+                  href={getApiDocLink(currentProvider)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center text-xs text-blue-600 hover:underline"
                 >
+                  {currentProvider === 'openai' && 'OpenAI '}
+                  {currentProvider === 'gemini' && 'Google '}
+                  {currentProvider === 'anthropic' && 'Anthropic '}
                   APIキーを取得 <ExternalLink className="h-3 w-3 ml-1" />
                 </a>
                 <Button
@@ -248,6 +333,30 @@ const SettingsSheet = () => {
                     value={apiKeys.openai}
                     onChange={(e) => setApiKey("openai", e.target.value)}
                     placeholder="sk-..."
+                    type={showApiKeys ? "text" : "password"}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="gemini-key" className="text-xs mb-1 block">
+                    Google Gemini APIキー
+                  </Label>
+                  <Input
+                    id="gemini-key"
+                    value={apiKeys.gemini}
+                    onChange={(e) => setApiKey("gemini", e.target.value)}
+                    placeholder="AIza..."
+                    type={showApiKeys ? "text" : "password"}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="anthropic-key" className="text-xs mb-1 block">
+                    Anthropic APIキー
+                  </Label>
+                  <Input
+                    id="anthropic-key"
+                    value={apiKeys.anthropic}
+                    onChange={(e) => setApiKey("anthropic", e.target.value)}
+                    placeholder="sk-ant-..."
                     type={showApiKeys ? "text" : "password"}
                   />
                 </div>

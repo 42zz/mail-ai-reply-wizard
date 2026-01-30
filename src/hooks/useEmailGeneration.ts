@@ -14,24 +14,35 @@ export interface EmailFormData {
 
 export function useEmailGeneration() {
   const { model, systemPrompt, apiKeys, styleExamples } = useSettings();
+
+  // Helper to get provider from model
+  const getProvider = (model: string): 'openai' | 'gemini' | 'anthropic' => {
+    if (model.startsWith('gpt') || model.startsWith('o3')) return 'openai';
+    if (model.startsWith('gemini')) return 'gemini';
+    if (model.startsWith('claude')) return 'anthropic';
+    return 'openai';
+  };
+
   const generateEmail = async (formData: EmailFormData) => {
+    const provider = getProvider(model);
+    const apiKey = apiKeys[provider];
+
     try {
       const response = await generateEmailReply({
         date: formData.date instanceof Date ? formData.date.toISOString().split('T')[0] : formData.date,
-        signatures: formData.signature || "", // Use empty string if signature is undefined
+        signatures: formData.signature || "",
         sender_name: formData.senderName,
-        recipient_name: "様", // デフォルト値を設定
+        recipient_name: "様",
         received_message: formData.receivedMessage || "",
         response_outline: formData.responseOutline,
-        model, // 選択されたモデルを使用
+        model,
         systemPrompt,
         style_examples: styleExamples,
         tone: formData.tone,
         length: formData.length,
-        mode: formData.mode || "email", // Pass mode to email generation
-      }, apiKeys.openai);
+        mode: formData.mode || "email",
+      }, apiKey);
 
-      // Add additional validation to ensure content exists
       if (response.success && !response.content) {
         console.error("API returned success but content is empty");
         return {
@@ -53,6 +64,9 @@ export function useEmailGeneration() {
   };
 
   const adjustText = async (currentText: string, customPrompt: string, tone?: number, length?: number) => {
+    const provider = getProvider(model);
+    const apiKey = apiKeys[provider];
+
     try {
       const response = await adjustEmailText(
         currentText,
@@ -61,10 +75,9 @@ export function useEmailGeneration() {
         length,
         model,
         systemPrompt,
-        apiKeys.openai
+        apiKey
       );
 
-      // Add additional validation to ensure content exists
       if (response.success && !response.content) {
         console.error("API returned success but content is empty");
         return {

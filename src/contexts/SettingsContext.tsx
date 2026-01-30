@@ -13,6 +13,8 @@ interface SettingsContextType {
   setSystemPrompt: (prompt: string) => void;
   apiKeys: {
     openai: string;
+    gemini: string;
+    anthropic: string;
   };
   setApiKey: (provider: string, key: string) => void;
   signatureTemplates: SignatureTemplate[];
@@ -78,6 +80,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   // Initialize API keys from localStorage or empty strings
   const [apiKeys, setApiKeys] = useState({
     openai: localStorage.getItem("openai_api_key") || "",
+    gemini: localStorage.getItem("gemini_api_key") || "",
+    anthropic: localStorage.getItem("anthropic_api_key") || "",
   });
 
   // Initialize signature templates from localStorage or empty array
@@ -97,6 +101,18 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setApiKeys((prev) => {
         const newKeys = { ...prev, openai: key };
         localStorage.setItem("openai_api_key", key);
+        return newKeys;
+      });
+    } else if (provider === "gemini") {
+      setApiKeys((prev) => {
+        const newKeys = { ...prev, gemini: key };
+        localStorage.setItem("gemini_api_key", key);
+        return newKeys;
+      });
+    } else if (provider === "anthropic") {
+      setApiKeys((prev) => {
+        const newKeys = { ...prev, anthropic: key };
+        localStorage.setItem("anthropic_api_key", key);
         return newKeys;
       });
     }
