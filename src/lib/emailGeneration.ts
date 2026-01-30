@@ -639,13 +639,29 @@ ${getLengthInstruction(length)}
     let systemPromptContent = systemPrompt || "You are a professional business email writer who specializes in Japanese business correspondence.";
     systemPromptContent += "\n\n現在のテキストを調整してください。ユーザーの調整依頼に基づいて、より適切で効果的な文章に改善してください。";
 
-    // Call appropriate API based on provider
-    return await adjustEmailTextInternal({
-      xmlInput,
-      systemPromptContent,
-      model: model || "gpt-4o",
-      apiKey,
-    });
+    // Determine provider from model
+    let provider: 'openai' | 'gemini' | 'anthropic';
+    if ((model || "").startsWith('gpt') || (model || "").startsWith('o3')) {
+      provider = 'openai';
+    } else if ((model || "").startsWith('gemini')) {
+      provider = 'gemini';
+    } else if ((model || "").startsWith('claude')) {
+      provider = 'anthropic';
+    } else {
+      provider = 'openai';
+    }
+
+    // Call appropriate provider
+    switch (provider) {
+      case 'openai':
+        return await callOpenAIAdjustment({ xmlInput, systemPromptContent, model: model || "gpt-4o", apiKey });
+      case 'gemini':
+        return await callGeminiAdjustment({ xmlInput, systemPromptContent, model: model || "gpt-4o", apiKey });
+      case 'anthropic':
+        return await callAnthropicAdjustment({ xmlInput, systemPromptContent, model: model || "gpt-4o", apiKey });
+      default:
+        return await callOpenAIAdjustment({ xmlInput, systemPromptContent, model: model || "gpt-4o", apiKey });
+    }
   } catch (error) {
     console.error("Text adjustment error:", error);
     return {
@@ -653,40 +669,6 @@ ${getLengthInstruction(length)}
       success: false,
       error: "ADJUSTMENT_ERROR"
     };
-  }
-};
-
-// 文章調整機能
-async function adjustEmailTextInternal(
-  xmlInput: string;
-  systemPromptContent: string;
-  model: string;
-  apiKey: string;
-}): Promise<EmailGenerationResponse> {
-  const { xmlInput, systemPromptContent, model, apiKey } = params;
-
-  // Determine provider from model
-  let provider: 'openai' | 'gemini' | 'anthropic';
-  if (model.startsWith('gpt') || model.startsWith('o3')) {
-    provider = 'openai';
-  } else if (model.startsWith('gemini')) {
-    provider = 'gemini';
-  } else if (model.startsWith('claude')) {
-    provider = 'anthropic';
-  } else {
-    provider = 'openai'; // Default
-  }
-
-  // Call appropriate provider
-  switch (provider) {
-    case 'openai':
-      return callOpenAIAdjustment({ xmlInput, systemPromptContent, model, apiKey });
-    case 'gemini':
-      return callGeminiAdjustment({ xmlInput, systemPromptContent, model, apiKey });
-    case 'anthropic':
-      return callAnthropicAdjustment({ xmlInput, systemPromptContent, model, apiKey });
-    default:
-      return callOpenAIAdjustment({ xmlInput, systemPromptContent, model, apiKey });
   }
 }
 
