@@ -554,6 +554,14 @@ function handleGeminiError(response: Response, errorData: any): EmailGenerationR
     };
   }
 
+  if (response.status === 404) {
+    return {
+      content: "Google Gemini APIエンドポイントが見つかりません。\n\n確認してください:\n- ネットワーク接続を確認してください\n- APIエンドポイントのURLが正しいか確認してください\n- モデル名が正しいか確認してください\n- 一時的なAPIの問題の可能性があります",
+      success: false,
+      error: "NOT_FOUND"
+    };
+  }
+
   if (response.status === 401 || response.status === 403) {
     return {
       content: "Google Gemini APIキーの認証に失敗しました。\n\nAPIキーが正しいか確認してください（「AIza...」で始まるGemini形式ですか？）\n\n正しいAPIキーを取得するには:\n- Google AI Studio (https://aistudio.google.com/app/apikey) にアクセス\n- 新しいAPIキーをクリート\n- プロジェクトで「Generative Language Client API」が有効になっていることを確認",
@@ -570,6 +578,30 @@ function handleGeminiError(response: Response, errorData: any): EmailGenerationR
     };
   }
   
+  if (response.status === 500 || response.status === 503 || response.status === 504) {
+    return {
+      content: "Google Gemini APIのサーバーエラーが発生しました。\n\nしばらく時間をおいてから再試行してください。エラーが続く場合は、Google AIのステータスページ（https://status.cloud.google.com/）を確認してください。",
+      success: false,
+      error: "SERVER_ERROR"
+    };
+  }
+
+  if (response.status === 502 || response.status === 503) {
+    return {
+      content: "Google Gemini APIのレート制限に達しました。\n\nしばらく時間をおいてから再試行してください。Google Cloudプロジェクトのレート制限設定を確認してください。",
+      success: false,
+      error: "RATE_LIMIT_EXCEEDED"
+    };
+  }
+
+  if (response.status >= 400 && response.status < 500) {
+    return {
+      content: `Google Gemini APIリクエストエラーが発生しました (${response.status})。\n\n詳細なエラー情報がコンソールに出力されています。`,
+      success: false,
+      error: `GEMINI_REQUEST_ERROR_${response.status}`
+    };
+  }
+
   return {
     content: `Google Gemini APIエラーが発生しました (${response.status})`,
     success: false,
