@@ -50,11 +50,10 @@ const SettingsSheet = () => {
   };
 
   // 選択中のモデルからプロバイダーを判定
-  const getCurrentProvider = (modelId: string): 'openai' | 'gemini' | 'anthropic' => {
+  const getCurrentProvider = (modelId: string): 'openai' | 'gemini' => {
     if (modelId.startsWith('gpt') || modelId.startsWith('o3')) return 'openai';
     if (modelId.startsWith('gemini')) return 'gemini';
-    if (modelId.startsWith('claude')) return 'anthropic';
-    return 'openai'; // デフォルト
+    return 'openai'; // デフォルト（Anthropicは削除）
   };
 
   const currentProvider = getCurrentProvider(model);
@@ -104,8 +103,6 @@ const SettingsSheet = () => {
         return "https://platform.openai.com/api-keys";
       case 'gemini':
         return "https://makersuite.google.com/app/apikey";
-      case 'anthropic':
-        return "https://console.anthropic.com/settings/keys";
       default:
         return "https://platform.openai.com/api-keys";
     }
@@ -180,9 +177,6 @@ const SettingsSheet = () => {
           }
           if (settings.apiKeys.gemini && typeof settings.apiKeys.gemini === 'string') {
             setApiKey('gemini', settings.apiKeys.gemini);
-          }
-          if (settings.apiKeys.anthropic && typeof settings.apiKeys.anthropic === 'string') {
-            setApiKey('anthropic', settings.apiKeys.anthropic);
           }
         }
         
@@ -263,15 +257,6 @@ const SettingsSheet = () => {
                     </SelectItem>
                   ))}
                 </SelectGroup>
-                <SelectSeparator />
-                <SelectGroup>
-                  <SelectLabel className="font-semibold">Anthropic Claude</SelectLabel>
-                  {AI_MODELS.anthropic.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>
-                      {m.name}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
@@ -331,18 +316,6 @@ const SettingsSheet = () => {
                     value={apiKeys.gemini}
                     onChange={(e) => setApiKey("gemini", e.target.value)}
                     placeholder="AIza..."
-                    type={showApiKeys ? "text" : "password"}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="anthropic-key" className="text-xs mb-1 block">
-                    Anthropic APIキー
-                  </Label>
-                  <Input
-                    id="anthropic-key"
-                    value={apiKeys.anthropic}
-                    onChange={(e) => setApiKey("anthropic", e.target.value)}
-                    placeholder="sk-ant-..."
                     type={showApiKeys ? "text" : "password"}
                   />
                 </div>
