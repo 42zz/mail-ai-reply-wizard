@@ -548,7 +548,7 @@ function handleGeminiError(response: Response, errorData: any): EmailGenerationR
   if (response.status === 400) {
     // Bad Request - APIキーの形式やリクエスト内容に問題がある可能性
     return {
-      content: "Google Gemini APIリクエストエラーが発生しました。\n\n確認してください:\n- APIキーの形式が正しいか確認してください（例: AIza...）\n- APIキーの権限設定でGenerate Content APIが有効になっているか確認してください\n- ネットワーク接続を確認してください",
+      content: "Google Gemini APIリクエストエラーが発生しました。\n\n確認してください:\n- APIキーの形式が正しいか確認してください（GeminiのAPIキーは「AIza...」で始まります）\n- 現在のAPIキー: sk-ant-api03-... これはOpenAI形式で、Geminiでは使用できません\n\nGoogle AI Studio (https://aistudio.google.com/app/apikey) からGemini用のAPIキーを取得してください\n- APIキーの権限設定で「Generate Content API」が有効になっているか確認してください\n- ネットワーク接続を確認してください",
       success: false,
       error: "BAD_REQUEST"
     };
@@ -556,7 +556,7 @@ function handleGeminiError(response: Response, errorData: any): EmailGenerationR
 
   if (response.status === 401 || response.status === 403) {
     return {
-      content: "Google Gemini APIキーの認証に失敗しました。設定画面から正しいAPIキーを設定してください。",
+      content: "Google Gemini APIキーの認証に失敗しました。\n\nAPIキーが正しいか確認してください（「AIza...」で始まるGemini形式ですか？）\n\n正しいAPIキーを取得するには:\n- Google AI Studio (https://aistudio.google.com/app/apikey) にアクセス\n- 新しいAPIキーをクリート\n- プロジェクトで「Generative Language Client API」が有効になっていることを確認",
       success: false,
       error: "INVALID_API_KEY"
     };
