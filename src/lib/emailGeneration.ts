@@ -464,6 +464,14 @@ async function callAnthropic(params: {
     clearTimeout(timeoutId);
 
     if (!response.ok) {
+      // CORSエラーを検出
+      if (response.status === 0 || response.type === 'opaque') {
+        return {
+          content: "Anthropic APIはブラウザから直接呼ぶとCORSエラーが発生します。\n\n解決策:\n- OpenAIまたはGeminiを使用してください\n- バックエンドサーバーを経由してAPIを呼ぶ必要があります",
+          success: false,
+          error: "CORS_ERROR"
+        };
+      }
       const errorData = await response.json();
       return handleAnthropicError(response, errorData);
     }
@@ -537,6 +545,15 @@ function handleOpenAIError(response: Response, errorData: { error?: { code?: str
 }
 
 function handleGeminiError(response: Response, errorData: any): EmailGenerationResponse {
+  if (response.status === 400) {
+    // Bad Request - APIキーの形式やリクエスト内容に問題がある可能性
+    return {
+      content: "Google Gemini APIリクエストエラーが発生しました。\n\n確認してください:\n- APIキーの形式が正しいか確認してください（例: AIza...）\n- APIキーの権限設定でGenerate Content APIが有効になっているか確認してください\n- ネットワーク接続を確認してください",
+      success: false,
+      error: "BAD_REQUEST"
+    };
+  }
+
   if (response.status === 401 || response.status === 403) {
     return {
       content: "Google Gemini APIキーの認証に失敗しました。設定画面から正しいAPIキーを設定してください。",
@@ -563,7 +580,7 @@ function handleGeminiError(response: Response, errorData: any): EmailGenerationR
 function handleAnthropicError(response: Response, errorData: any): EmailGenerationResponse {
   if (response.status === 401) {
     return {
-      content: "Anthropic APIキーの認証に失敗しました。設定画面から正しいAPIキーを設定してください。",
+      content: "Anthropic APIキーの認証に失敗しました。設定画面から正しいAPIキーを設定してください。\n\n注: Anthropic APIはブラウザから直接呼ぶとCORSエラーが発生します。OpenAIまたはGeminiを使用してください。",
       success: false,
       error: "INVALID_API_KEY"
     };
@@ -898,6 +915,14 @@ async function callAnthropicAdjustment(params: {
     clearTimeout(timeoutId);
 
     if (!response.ok) {
+      // CORSエラーを検出
+      if (response.status === 0 || response.type === 'opaque') {
+        return {
+          content: "Anthropic APIはブラウザから直接呼ぶとCORSエラーが発生します。\n\n解決策:\n- OpenAIまたはGeminiを使用してください\n- バックエンドサーバーを経由してAPIを呼ぶ必要があります",
+          success: false,
+          error: "CORS_ERROR"
+        };
+      }
       const errorData = await response.json();
       return handleAnthropicError(response, errorData);
     }

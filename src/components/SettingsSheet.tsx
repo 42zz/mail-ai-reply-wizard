@@ -42,10 +42,11 @@ const SettingsSheet = () => {
       { id: "gemini-3-flash-preview", name: "Gemini 3 Flash" },
       { id: "gemini-3-pro", name: "Gemini 3 Pro" },
     ],
-    anthropic: [
-      { id: "claude-sonnet-4-5-20250929", name: "Claude Sonnet 4.5" },
-      { id: "claude-haiku-4-5-20251001", name: "Claude Haiku 4.5" },
-    ],
+    // Anthropic/Claude はCORSエラーにより一時的に無効化
+    // anthropic: [
+    //   { id: "claude-sonnet-4-5-20250929", name: "Claude Sonnet 4.5" },
+    //   { id: "claude-haiku-4-5-20251001", name: "Claude Haiku 4.5" },
+    // ],
   };
 
   // 選択中のモデルからプロバイダーを判定
